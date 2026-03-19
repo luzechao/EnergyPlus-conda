@@ -37,9 +37,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # rattler-build-action builds the recipe and uploads the package as a
-      # GitHub Actions artifact. We point it at recipe/recipe.yaml (not the
-      # default conda.recipe/recipe.yaml).
+      # rattler-build-action builds the recipe. We disable its internal
+      # upload-artifact step (it uses a hardcoded path that doesn't match our
+      # output layout) and do the upload ourselves below.
       - name: Build conda package
         uses: prefix-dev/rattler-build-action@v0.2.36
         with:
@@ -47,9 +47,16 @@ jobs:
           build-args: >-
             --target-platform ${{ matrix.target.platform }}
             -c conda-forge
-          # Unique artifact name per matrix leg so they don't collide.
-          artifact-name: conda-pkg-${{ matrix.target.platform }}
-          upload-artifact: true
+          upload-artifact: false
+
+      # Upload the built .conda file as a GitHub Actions artifact so it can
+      # be downloaded from the Actions UI for inspection.
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-pkg-${{ matrix.target.platform }}
+          path: output/${{ matrix.target.platform }}/*.conda
+          if-no-files-found: error
 
       # Upload to prefix.dev channel 'natlabrockies' via OIDC (no API key needed).
       # Trusted publisher must be configured at:
