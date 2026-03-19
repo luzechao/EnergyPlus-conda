@@ -36,34 +36,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Write a platform-specific variant config next to the recipe so that
-      # rattler-build auto-discovers it.  The ${{ stdlib('c') }} Jinja call
-      # in recipe.yaml requires c_stdlib (and c_stdlib_version) to be defined.
-      - name: Write variant config (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          printf 'c_stdlib:\n  - sysroot\nc_stdlib_version:\n  - "2.17"\n' \
-            > recipe/conda_build_config.yaml
-
-      - name: Write variant config (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          if [[ "${{ matrix.target.platform }}" == "osx-arm64" ]]; then
-            VER="11.0"
-          else
-            VER="10.13"
-          fi
-          printf 'c_stdlib:\n  - __osx\nc_stdlib_version:\n  - "%s"\nmacosx_deployment_target:\n  - "%s"\n' \
-            "$VER" "$VER" > recipe/conda_build_config.yaml
-
-      - name: Write variant config (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          printf 'c_stdlib:\n  - m2w64-msvcrt\n' > recipe/conda_build_config.yaml
-
       # rattler-build-action builds the recipe. We disable its internal
       # upload-artifact step (it uses a hardcoded path that doesn't match our
       # output layout) and do the upload ourselves below.

@@ -24,7 +24,6 @@ requirements:
     - ${{ compiler('c') }}
     - ${{ compiler('cxx') }}
     - ${{ compiler('fortran') }}
-    - ${{ stdlib('c') }}
     - cmake >=3.19
     - ninja
     - python >=3.9   # needed at configure time for LINK_WITH_PYTHON
