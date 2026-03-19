@@ -12,7 +12,8 @@ set -euo pipefail
 BUILD_DIR="${SRC_DIR}/../build_energyplus"
 mkdir -p "${BUILD_DIR}"
 
-cmake "${CMAKE_ARGS}" \
+# shellcheck disable=SC2086  # CMAKE_ARGS must be word-split
+cmake ${CMAKE_ARGS} \
   -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="${PREFIX}" \

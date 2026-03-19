@@ -6,8 +6,10 @@ package:
   version: ${{ version }}
 
 source:
-  url: https://github.com/NatLabRockies/EnergyPlus/archive/refs/tags/v${{ version }}.tar.gz
-  sha256: aa2acf88784778ac20fa6a7035b54c6597cc2c5a35aa251e1abc3f0e1810f111
+  git: https://github.com/NatLabRockies/EnergyPlus
+  tag: "v${{ version }}"
+  depth: 1
+  submodules: false
 
 build:
   number: 0
