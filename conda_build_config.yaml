@@ -13,3 +13,17 @@ c_stdlib:
 
 c_stdlib_version:
   - "2.17"
+
+# Pin the GCC toolchain to <15 to avoid a GCC 15 -Werror=restrict regression
+# in the bundled fmt v8.0.1 third-party library (third_party/fmt-8.0.1).
+# GCC 15 introduced a stricter -Wrestrict check that fires inside fmt's
+# write_significand → std::uninitialized_copy → __builtin_memcpy path and is
+# treated as a fatal error by EnergyPlus's -Werror build flags.
+# Upstream EnergyPlus release builds use ubuntu-22.04 (GCC 11/13) and are
+# unaffected; we match that constraint here until fmt is upgraded upstream.
+c_compiler_version:
+  - "14"
+cxx_compiler_version:
+  - "14"
+fortran_compiler_version:
+  - "14"

@@ -46,6 +46,7 @@ jobs:
           build-args: >-
             --target-platform ${{ matrix.target.platform }}
             -c conda-forge
+            --variant-config conda_build_config.yaml
           upload-artifact: false
       # Upload the built .conda file as a GitHub Actions artifact so it can
       # be downloaded from the Actions UI for inspection.
