@@ -1,0 +1,64 @@
+context:
+  version: "25.2.0"
+
+package:
+  name: energyplus
+  version: ${{ version }}
+
+source:
+  url: https://github.com/NatLabRockies/EnergyPlus/archive/refs/tags/v${{ version }}.tar.gz
+  sha256: aa2acf88784778ac20fa6a7035b54c6597cc2c5a35aa251e1abc3f0e1810f111
+
+build:
+  number: 0
+  # Skip unsupported platforms
+  skip:
+    - linux-aarch64
+    - linux-ppc64le
+    - linux-s390x
+  script:
+    - if: unix
+      then: bash $RECIPE_DIR/build.sh
+    - if: win
+      then: call "%RECIPE_DIR%\build.bat"
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - ${{ compiler('fortran') }}
+    - ${{ stdlib('c') }}
+    - cmake >=3.19
+    - ninja
+    - python >=3.9   # needed at configure time for LINK_WITH_PYTHON
+  host:
+    - python >=3.9
+  run:
+    - python >=3.9
+
+tests:
+  - script:
+      # Verify the energyplus binary is on PATH and reports the correct version
+      - if: unix
+        then: energyplus --version
+      - if: win
+        then: energyplus.exe --version
+      # Verify the Python API is importable
+      - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
+
+about:
+  homepage: https://energyplus.net
+  repository: https://github.com/NatLabRockies/EnergyPlus
+  documentation: https://energyplus.net/documentation
+  summary: EnergyPlus whole-building energy simulation program
+  description: |
+    EnergyPlus is a whole building energy simulation program developed by
+    the U.S. Department of Energy (DOE) Building Technologies Office (BTO).
+    It models heating, cooling, lighting, ventilating, and other energy flows
+    in buildings, and includes a Python API for programmatic control.
+  license: LicenseRef-EnergyPlus
+  license_file: LICENSE.txt
+
+extra:
+  recipe-maintainers:
+    - NatLabRockies

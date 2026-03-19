@@ -1,0 +1,18 @@
+# rattler-build output
+output/
+
+# pixi environments and lock files
+.pixi/
+pixi.lock
+
+# CMake build artefacts (if someone runs cmake locally)
+build/
+build_energyplus/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/

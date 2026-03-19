@@ -1,0 +1,17 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[dependencies]
+rattler-build = ">=0.36"
+
+[tasks]
+# Build the conda package locally using rattler-build
+build = "rattler-build build --recipe recipe/ -c conda-forge"
+
+# Rebuild with verbose CMake output (useful for debugging)
+build-verbose = "rattler-build build --recipe recipe/ -c conda-forge --no-clean"
+
+# Run only the rattler-build test phase against a built .conda artifact
+# Usage: pixi run test -- /path/to/energyplus-25.2.0-*.conda
+test = "rattler-build test -c conda-forge"
