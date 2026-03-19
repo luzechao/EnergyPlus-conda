@@ -52,7 +52,14 @@ jobs:
       # Show where rattler-build wrote the output (helps debug path issues).
       - name: Find output files
         shell: bash
-        run: find / -maxdepth 6 -name "*.conda" -o -name "*.tar.bz2" 2>/dev/null | head -20
+        run: |
+          echo "=== energyplus .conda files ==="
+          find / -maxdepth 10 -name "energyplus*.conda" 2>/dev/null || true
+          echo "=== rattler-build output dir ==="
+          find / -maxdepth 6 -type d -name "output" 2>/dev/null || true
+          echo "=== HOME ==="
+          echo "$HOME"
+          ls "$HOME" || true
 
       # Upload the built .conda file as a GitHub Actions artifact so it can
       # be downloaded from the Actions UI for inspection.
