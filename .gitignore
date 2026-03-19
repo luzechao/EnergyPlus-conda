@@ -1,5 +1,6 @@
 # rattler-build output
 output/
+rb/
 
 # pixi environments and lock files
 .pixi/
