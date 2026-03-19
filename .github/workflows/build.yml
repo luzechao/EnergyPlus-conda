@@ -52,6 +52,9 @@ jobs:
           upload-artifact: true
 
       # Upload to prefix.dev channel 'natlabrockies' via OIDC (no API key needed).
+      # Trusted publisher must be configured at:
+      #   https://prefix.dev/channels/natlabrockies/settings
+      # with: owner=luzechao, repo=EnergyPlus-conda, workflow=build.yml
       # Only runs on pushes to the default branch or on tags — not on PRs.
       - name: Upload to prefix.dev
         if: >-
