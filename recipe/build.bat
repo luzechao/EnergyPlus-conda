@@ -1,14 +1,15 @@
 @echo off
-:: EnergyPlus rattler-build script (Windows / win-64, MinGW64 toolchain)
+:: EnergyPlus rattler-build script (Windows / win-64)
 ::
-:: With c_stdlib=m2w64-msvcrt, rattler-build activates the MinGW64 compiler
-:: environment (m2w64_c, m2w64_cxx, gfortran_win-64).  Compilers are:
-::   CC  = x86_64-w64-mingw32-gcc.exe
-::   CXX = x86_64-w64-mingw32-g++.exe
-::   FC  = x86_64-w64-mingw32-gfortran.exe
+:: Uses Visual Studio 17 2022 for C/C++ (MSVC) and the msys64 gfortran
+:: that is pre-installed on all GitHub windows-2022 runners, matching
+:: the approach used by the upstream EnergyPlus release_windows.yml CI.
 ::
-:: We pass them explicitly to CMake to avoid any MSVC settings that may be
-:: baked into CMAKE_ARGS by the conda-forge sysroot logic.
+:: rattler-build injects CMAKE_ARGS with -DCMAKE_INSTALL_PREFIX=... pointing
+:: at %PREFIX%\Library (the Windows conda Library tree).  We do NOT pass
+:: -DCMAKE_C_COMPILER or -DCMAKE_CXX_COMPILER so that CMake auto-detects
+:: the MSVC toolchain via the VS generator.  Fortran is provided by the
+:: msys64 MinGW64 gfortran on PATH.
 
 setlocal EnableDelayedExpansion
 
@@ -17,22 +18,25 @@ echo SRC_DIR      = %SRC_DIR%
 echo PREFIX       = %PREFIX%
 echo BUILD_PREFIX = %BUILD_PREFIX%
 echo CPU_COUNT    = %CPU_COUNT%
-echo CC           = %CC%
-echo CXX          = %CXX%
-echo FC           = %FC%
 echo CMAKE_ARGS   = %CMAKE_ARGS%
 
-set BUILD_DIR=%SRC_DIR%\..\build_energyplus
+:: msys64 gfortran is at C:\msys64\mingw64\bin on windows-2022 runners.
+set "FC=C:\msys64\mingw64\bin\x86_64-w64-mingw32-gfortran.exe"
+if not exist "%FC%" (
+    echo ERROR: gfortran not found at %FC%
+    exit /b 1
+)
+echo FC = %FC%
+
+set "BUILD_DIR=%SRC_DIR%\..\build_energyplus"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
-:: Explicitly pass MinGW compilers so CMake does not accidentally pick up cl.exe.
-:: CMAKE_ARGS still provides -DCMAKE_INSTALL_PREFIX and related flags.
+:: Use Visual Studio 17 2022 generator for C/C++; gfortran for Fortran.
+:: CMAKE_ARGS provides -DCMAKE_INSTALL_PREFIX=%PREFIX%\Library and path hints.
 cmake %CMAKE_ARGS% ^
-  -GNinja ^
-  -DCMAKE_BUILD_TYPE=Release ^
-  -DCMAKE_C_COMPILER="%CC%" ^
-  -DCMAKE_CXX_COMPILER="%CXX%" ^
+  -G "Visual Studio 17 2022" -A x64 ^
   -DCMAKE_Fortran_COMPILER="%FC%" ^
+  -DCMAKE_BUILD_TYPE=Release ^
   -DBUILD_FORTRAN=ON ^
   -DOPENGL_REQUIRED=OFF ^
   -DDOCUMENTATION_BUILD=DoNotBuild ^

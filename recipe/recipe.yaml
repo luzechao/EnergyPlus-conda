@@ -21,9 +21,15 @@ build:
 
 requirements:
   build:
-    - ${{ compiler('c') }}
-    - ${{ compiler('cxx') }}
-    - ${{ compiler('fortran') }}
+    # On Unix, use conda-forge compilers.
+    # On Windows, Visual Studio 2022 (MSVC) and msys64 gfortran are used
+    # directly via the VS generator in build.bat — no conda compiler packages.
+    - if: unix
+      then: ${{ compiler('c') }}
+    - if: unix
+      then: ${{ compiler('cxx') }}
+    - if: unix
+      then: ${{ compiler('fortran') }}
     - cmake >=3.19
     - ninja
     - python >=3.9   # needed at configure time for LINK_WITH_PYTHON
