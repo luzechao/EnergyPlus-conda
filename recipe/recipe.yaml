@@ -13,11 +13,6 @@ source:
 
 build:
   number: 0
-  # Skip unsupported platforms
-  skip:
-    - linux-aarch64
-    - linux-ppc64le
-    - linux-s390x
   script:
     - if: unix
       then: bash $RECIPE_DIR/build.sh
