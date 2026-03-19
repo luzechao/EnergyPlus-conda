@@ -29,9 +29,8 @@ jobs:
             os: macos-13          # Intel runner
           - platform: osx-arm64
             os: macos-14          # Apple Silicon runner
-          # win-64 is excluded: the EnergyPlus v25.2.0 source tarball contains
-          # macOS .app bundle symlinks (SYMTYPE=2) that rattler-build cannot
-          # extract on Windows. Re-enable once upstream fixes the tarball.
+          - platform: win-64
+            os: windows-2022
 
     steps:
       - name: Checkout
@@ -48,7 +47,6 @@ jobs:
             --target-platform ${{ matrix.target.platform }}
             -c conda-forge
           upload-artifact: false
-
       # Show where rattler-build wrote the output (helps debug path issues).
       - name: Find output files
         shell: bash
