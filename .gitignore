@@ -2,6 +2,9 @@
 output/
 rb/
 
+# CI-generated per-platform variant config (written by workflow before build)
+recipe/conda_build_config.yaml
+
 # pixi environments and lock files
 .pixi/
 pixi.lock

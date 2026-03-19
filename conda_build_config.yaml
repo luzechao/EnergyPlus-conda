@@ -1,11 +1,12 @@
-# Variant configuration for local rattler-build renders.
-# Provides the c_stdlib variable required by ${{ stdlib('c') }}.
-# On CI, rattler-build-action injects its own variant config — this file
-# is only used when running `pixi run build` locally.
+# Variant configuration for LOCAL rattler-build renders (pixi run build).
+# This file is at the repo root and passed via --variant-config in pixi.toml.
+# On CI the workflow writes a platform-specific copy to recipe/ instead.
 #
-# Note: rattler-build does NOT support conda-build selector comments (# [linux]).
-# All values here apply unconditionally; use recipe.yaml if/then selectors
-# for platform-specific logic instead.
+# rattler-build does NOT support conda-build selector comments (# [linux]).
+# The values below are for Linux.  For local macOS builds swap in:
+#   c_stdlib: __osx
+#   c_stdlib_version: "10.13"   # or "11.0" for arm64
+#   macosx_deployment_target: "10.13"
 
 c_stdlib:
   - sysroot
