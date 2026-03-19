@@ -36,7 +36,12 @@ sed -i 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
 #                            uses SIZE_MAX without including <cstdint>; newer
 #                            libstdc++ no longer pulls it in transitively.
 #                            Force-including <cstdint> is safe (no side effects).
-EXTRA_CXX_FLAGS="-Wno-dangling-reference -Wno-restrict -include cstdint"
+#   -Wno-alloc-size-larger-than  (GCC 15+): false-positive in ObjexxFCL/
+#                            AlignedAllocator.hh:47. The ternary guard n > 0u
+#                            correctly prevents zero/overflow allocation, but
+#                            GCC's IPA analysis loses the guard after deep
+#                            template inlining and reports worst-case SIZE_MAX*sizeof(T)+63.
+EXTRA_CXX_FLAGS="-Wno-dangling-reference -Wno-restrict -include cstdint -Wno-alloc-size-larger-than"
 
 # shellcheck disable=SC2086  # CMAKE_ARGS and EXTRA_CXX_FLAGS must be word-split
 cmake ${CMAKE_ARGS} \
