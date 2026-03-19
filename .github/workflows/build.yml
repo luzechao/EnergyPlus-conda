@@ -47,18 +47,6 @@ jobs:
             --target-platform ${{ matrix.target.platform }}
             -c conda-forge
           upload-artifact: false
-      # Show where rattler-build wrote the output (helps debug path issues).
-      - name: Find output files
-        shell: bash
-        run: |
-          echo "=== energyplus .conda files ==="
-          find / -maxdepth 10 -name "energyplus*.conda" 2>/dev/null || true
-          echo "=== rattler-build output dir ==="
-          find / -maxdepth 6 -type d -name "output" 2>/dev/null || true
-          echo "=== HOME ==="
-          echo "$HOME"
-          ls "$HOME" || true
-
       # Upload the built .conda file as a GitHub Actions artifact so it can
       # be downloaded from the Actions UI for inspection.
       - name: Upload artifact
@@ -79,15 +67,5 @@ jobs:
           (github.ref == 'refs/heads/main' ||
            github.ref == 'refs/heads/master' ||
            startsWith(github.ref, 'refs/tags/'))
-        shell: bash
         run: |
-          # Find and upload every .conda file produced by the build step.
-          shopt -s nullglob
-          EXIT_CODE=0
-          for pkg in $(find output -type f -name "*.conda"); do
-            echo "Uploading ${pkg}"
-            if ! rattler-build upload prefix -c natlabrockies "${pkg}"; then
-              EXIT_CODE=1
-            fi
-          done
-          exit $EXIT_CODE
+          rattler-build upload prefix -c natlabrockies output/${{ matrix.target.platform }}/*.conda

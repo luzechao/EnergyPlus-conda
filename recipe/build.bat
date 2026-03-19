@@ -1,63 +1,34 @@
 @echo off
-:: EnergyPlus conda-forge build script (Windows)
+:: EnergyPlus rattler-build script (Windows / win-64)
 ::
-:: Environment variables provided by rattler-build / conda-build:
-::   SRC_DIR    - unpacked source tree
-::   PREFIX     - conda install prefix (contains the host environment)
-::   BUILD_PREFIX - conda build environment prefix
-::   CPU_COUNT  - number of CPUs available
-::   CMAKE_ARGS - injected by conda-forge (includes install prefix etc.)
+:: rattler-build activates compiler environments before calling this script.
+:: CMAKE_ARGS is injected automatically and includes:
+::   -DCMAKE_INSTALL_PREFIX=%PREFIX%\Library  (Windows conda convention)
+::   compiler/linker flags, sysroot settings, etc.
 ::
-:: conda-forge's activation scripts set VSINSTALLDIR and try to call vcvars,
-:: but the vcvars call can fail if vswhere returns unexpected results.
-:: We call vcvars64.bat ourselves to ensure cl.exe is on PATH.
+:: DO NOT call vcvars64.bat here — the conda-forge compiler activation already
+:: sets CC, CXX, FC and puts cl.exe / flang on PATH.
 
 setlocal EnableDelayedExpansion
 
-:: --- Find and activate MSVC ---
-set "VSINSTALLDIR="
-for /F "usebackq tokens=*" %%i in (`vswhere.exe -nologo -products * -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2^>nul`) do (
-    set "VSINSTALLDIR=%%i\"
-)
-
-:: Fallbacks in order: Enterprise, BuildTools, Community, Professional
-if not defined VSINSTALLDIR if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\" (
-    set "VSINSTALLDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\"
-)
-if not defined VSINSTALLDIR if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\" (
-    set "VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\"
-)
-if not defined VSINSTALLDIR if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\" (
-    set "VSINSTALLDIR=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\"
-)
-if not defined VSINSTALLDIR if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\" (
-    set "VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\"
-)
-if not defined VSINSTALLDIR if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\" (
-    set "VSINSTALLDIR=C:\Program Files\Microsoft Visual Studio\2022\Community\"
-)
-
-if not defined VSINSTALLDIR (
-    echo ERROR: Could not find Visual Studio 2022 installation.
-    exit /b 1
-)
-
-echo Using VS at: %VSINSTALLDIR%
-call "%VSINSTALLDIR%VC\Auxiliary\Build\vcvars64.bat"
-if errorlevel 1 (
-    echo ERROR: vcvars64.bat failed.
-    exit /b 1
-)
+echo === Build environment ===
+echo SRC_DIR    = %SRC_DIR%
+echo PREFIX     = %PREFIX%
+echo BUILD_PREFIX = %BUILD_PREFIX%
+echo CPU_COUNT  = %CPU_COUNT%
+echo CC  = %CC%
+echo CXX = %CXX%
+echo FC  = %FC%
+echo CMAKE_ARGS = %CMAKE_ARGS%
 
 set BUILD_DIR=%SRC_DIR%\..\build_energyplus
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
-:: CMAKE_ARGS already contains:
-::   -DCMAKE_BUILD_TYPE=Release
-::   -DCMAKE_INSTALL_PREFIX=%PREFIX%\Library
-:: We add EnergyPlus-specific flags and force Ninja (since vcvars is active).
+:: CMAKE_ARGS already contains -DCMAKE_INSTALL_PREFIX and compiler flags.
+:: -GNinja requires that ninja.exe is on PATH (it is, from the build env).
 cmake %CMAKE_ARGS% ^
   -GNinja ^
+  -DCMAKE_BUILD_TYPE=Release ^
   -DBUILD_FORTRAN=ON ^
   -DOPENGL_REQUIRED=OFF ^
   -DDOCUMENTATION_BUILD=DoNotBuild ^
