@@ -43,6 +43,19 @@ sed -i 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
 #                            template inlining and reports worst-case SIZE_MAX*sizeof(T)+63.
 EXTRA_CXX_FLAGS="-Wno-dangling-reference -Wno-restrict -include cstdint -Wno-alloc-size-larger-than"
 
+# Set a long placeholder RPATH so patchelf can always rewrite it.
+# rattler-build uses patchelf post-install to set $ORIGIN-relative RPATHs,
+# but patchelf cannot grow the ELF RPATH section — it can only shrink or keep
+# the same length.  Build dirs are short (/tmp/energyplusXXXXXX/...) so the
+# default baked-in RPATH is short.  We pad the install RPATH to 256 chars with
+# harmless /././ segments so the ELF section is allocated large enough.
+# CMAKE_BUILD_WITH_INSTALL_RPATH=ON makes CMake bake that long value at link
+# time rather than a short build-dir path.
+# Note: our flags come AFTER ${CMAKE_ARGS} so they override anything rattler
+# injects for CMAKE_INSTALL_RPATH.
+_rpath="${PREFIX}/lib"
+while [ ${#_rpath} -lt 256 ]; do _rpath="${_rpath}/././"; done
+
 # shellcheck disable=SC2086  # CMAKE_ARGS and EXTRA_CXX_FLAGS must be word-split
 cmake ${CMAKE_ARGS} \
   -GNinja \
@@ -57,6 +70,8 @@ cmake ${CMAKE_ARGS} \
   -DLINK_WITH_PYTHON=ON \
   -DPython_ROOT_DIR="${PREFIX}" \
   -DPython_FIND_STRATEGY=LOCATION \
+  -DCMAKE_INSTALL_RPATH="${_rpath}" \
+  -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
   -B "${BUILD_DIR}" \
   -S "${SRC_DIR}"
 
