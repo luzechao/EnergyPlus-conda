@@ -62,7 +62,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          printf 'c_stdlib:\n  - vs\n' > recipe/conda_build_config.yaml
+          printf 'c_stdlib:\n  - m2w64-msvcrt\n' > recipe/conda_build_config.yaml
 
       # rattler-build-action builds the recipe. We disable its internal
       # upload-artifact step (it uses a hardcoded path that doesn't match our
