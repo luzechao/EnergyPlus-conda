@@ -86,13 +86,21 @@ if errorlevel 1 exit /b 1
 :: ---------------------------------------------------------------------------
 
 :: 1. Wrapper bat
+:: Use %%~dp0.. to resolve the install dir at runtime relative to the wrapper's
+:: own location (%PREFIX%\Library\bin\..\  = %PREFIX%\Library\).
+:: Do NOT bake %PREFIX% into the wrapper — it is the build-time prefix and will
+:: be wrong when the package is installed into a different environment.
 if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
 (
     echo @echo off
-    echo cd /d "%PREFIX%\Library"
-    echo .\energyplus.exe %%*
+    echo "%%~dp0..\energyplus.exe" %%*
 ) > "%PREFIX%\Library\bin\energyplus.bat"
 
 :: 2. pyenergyplus .pth file
+:: Write a path relative to site-packages so it works in any install prefix.
+:: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages and
+:: EnergyPlus is installed at %PREFIX%\Library, so the relative path is
+:: "..\..\Library" (site-packages -> Lib -> PREFIX -> Library).
+:: Python resolves relative .pth entries relative to the site-packages dir.
 for /f "delims=" %%i in ('"%PREFIX%\python.exe" -c "import site; print(site.getsitepackages()[0])"') do set "SITE_PACKAGES=%%i"
-echo %PREFIX%\Library> "%SITE_PACKAGES%\energyplus.pth"
+echo ..\..\Library> "%SITE_PACKAGES%\energyplus.pth"
