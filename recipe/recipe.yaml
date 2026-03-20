@@ -39,14 +39,23 @@ requirements:
     - python >=3.9
 
 tests:
+  - package_contents:
+      files:
+        - if: unix
+          then: bin/energyplus
+        - if: win
+          then: Library/energyplus.exe
+        - if: win
+          then: Library/bin/energyplus.bat
   - script:
-      # On Unix: $PREFIX/bin/energyplus shell wrapper (always on PATH).
-      # On Windows: rattler-build test envs do not run conda activation so
-      # Library\bin is not on PATH. Call the wrapper by full path instead.
+      # Diagnostic: show what's installed so we can confirm the layout
+      - if: win
+        then: python -c "import sys,os; lib=os.path.join(sys.prefix,'Library'); print('Library contents:'); [print(' ',f) for f in os.listdir(lib)] if os.path.isdir(lib) else print('NO Library dir')"
+      # Run energyplus --version
       - if: unix
         then: energyplus --version
       - if: win
-        then: python -c "import sys,subprocess,os; subprocess.run([os.path.join(sys.prefix,'Library','energyplus.exe'),'--version'],check=True)"
+        then: python -c "import sys,subprocess,os; exe=os.path.join(sys.prefix,'Library','energyplus.exe'); print('Running:',exe); subprocess.run([exe,'--version'],check=True)"
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 
