@@ -40,9 +40,16 @@ sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
 # clang-only:
 #   -Wno-deprecated-literal-operator  clang deprecates `operator"" _a`
 #                                     (space before UDL identifier) in fmt 8.0.1
+#   -Wno-unknown-warning-option       kiva/compiler-flags.cmake adds
+#                                     -Wno-enum-constexpr-conversion gated on
+#                                     Clang>=16 / AppleClang>=15, but the
+#                                     conda-forge clang on macos-14 may be
+#                                     older and rejects the flag with
+#                                     -Werror,-Wunknown-warning-option.
+#                                     This suppresses that class of error safely.
 EXTRA_CXX_FLAGS="-include cstdint"
 if "${CXX:-c++}" --version 2>&1 | grep -q clang; then
-    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator"
+    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator -Wno-unknown-warning-option"
 else
     # GCC
     EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-dangling-reference -Wno-restrict -Wno-alloc-size-larger-than"
