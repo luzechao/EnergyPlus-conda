@@ -25,17 +25,21 @@ jobs:
         target:
           - platform: linux-64
             os: ubuntu-22.04
-          # osx-64, osx-arm64, win-64 re-enabled after linux-64 passes
-          # - platform: osx-64
-          #   os: macos-13          # Intel runner
-          # - platform: osx-arm64
-          #   os: macos-14          # Apple Silicon runner
-          # - platform: win-64
-          #   os: windows-2022
+          - platform: osx-arm64
+            os: macos-14          # Apple Silicon runner
+          - platform: win-64
+            os: windows-2022
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Install mingw64 gfortran on Windows — the msys64 base install on
+      # windows-2022 runners does NOT include gfortran by default.
+      - name: Install gfortran (Windows)
+        if: matrix.target.platform == 'win-64'
+        shell: cmd
+        run: C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed mingw-w64-x86_64-gcc-fortran
 
       # rattler-build-action builds the recipe. We disable its internal
       # upload-artifact step (it uses a hardcoded path that doesn't match our

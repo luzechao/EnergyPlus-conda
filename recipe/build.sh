@@ -22,7 +22,7 @@ mkdir -p "${BUILD_DIR}"
 # and is read before being set in the two constructors that delegate to
 # addGasItems().  GCC -Werror=uninitialized correctly rejects this.
 # Fix: add "= false" to the declaration in Gas.hpp.
-sed -i 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
+sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
     "${SRC_DIR}/third_party/Windows-CalcEngine/src/Gases/src/Gas.hpp"
 
 # Extra CXX flags to paper over third-party source issues that cannot be fixed
