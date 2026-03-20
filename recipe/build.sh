@@ -76,3 +76,29 @@ cmake ${CMAKE_ARGS} \
   -S "${SRC_DIR}"
 
 cmake --build "${BUILD_DIR}" --target install -j"${CPU_COUNT:-2}"
+
+# ---------------------------------------------------------------------------
+# Post-install: wire up conda-friendly paths
+# ---------------------------------------------------------------------------
+# EnergyPlus installs everything flat to $PREFIX/ (not $PREFIX/bin/).
+# We need to:
+#   1. Put a wrapper on PATH so `energyplus` works from anywhere
+#   2. Make pyenergyplus importable by Python
+
+# 1. Create $PREFIX/bin/energyplus wrapper script
+#    EnergyPlus must be invoked from its install dir so it finds co-located
+#    IDD/data files (it uses relative paths from the binary location).
+mkdir -p "${PREFIX}/bin"
+cat > "${PREFIX}/bin/energyplus" << 'WRAPPER'
+#!/usr/bin/env bash
+# Wrapper: delegate to the real energyplus binary in $PREFIX
+# The binary is one level up from $PREFIX/bin/
+_ep_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "${_ep_dir}/energyplus" "$@"
+WRAPPER
+chmod +x "${PREFIX}/bin/energyplus"
+
+# 2. Make pyenergyplus importable: drop a .pth file in site-packages
+#    pointing at $PREFIX so `import pyenergyplus` resolves to $PREFIX/pyenergyplus/
+SITE_PACKAGES="$(python -c 'import site; print(site.getsitepackages()[0])')"
+echo "${PREFIX}" > "${SITE_PACKAGES}/energyplus.pth"
