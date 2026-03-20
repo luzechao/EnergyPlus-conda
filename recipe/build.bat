@@ -90,7 +90,7 @@ if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
 (
     echo @echo off
     echo cd /d "%PREFIX%\Library"
-    echo energyplus.exe %%*
+    echo .\energyplus.exe %%*
 ) > "%PREFIX%\Library\bin\energyplus.bat"
 
 :: 2. pyenergyplus .pth file
