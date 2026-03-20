@@ -46,7 +46,7 @@ tests:
       - if: unix
         then: energyplus --version
       - if: win
-        then: '"%PREFIX%\Library\bin\energyplus" --version'
+        then: python -c "import sys,subprocess,os; subprocess.run([os.path.join(sys.prefix,'Library','energyplus.exe'),'--version'],check=True)"
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 
