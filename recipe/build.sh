@@ -25,23 +25,28 @@ mkdir -p "${BUILD_DIR}"
 sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
     "${SRC_DIR}/third_party/Windows-CalcEngine/src/Gases/src/Gas.hpp"
 
-# Extra CXX flags to paper over third-party source issues that cannot be fixed
-# without modifying upstream code:
+# Extra CXX flags to paper over third-party source issues.
+# Flags are split by compiler because clang rejects GCC-only warning options
+# with -Werror,-Wunknown-warning-option.
 #
-#   -Wno-dangling-reference  (GCC 13+): false-positive in fmt/core.h:1637 via
-#                            third_party/btwxt (courierr.h)
-#   -Wno-restrict            (GCC 15+): false-positive in fmt/format.h via
-#                            third_party/idd generate_embeddable_epJSON_schema
-#   -include cstdint         third_party/ssc/shared/lib_battery_dispatch.cpp
-#                            uses SIZE_MAX without including <cstdint>; newer
-#                            libstdc++ no longer pulls it in transitively.
-#                            Force-including <cstdint> is safe (no side effects).
-#   -Wno-alloc-size-larger-than  (GCC 15+): false-positive in ObjexxFCL/
-#                            AlignedAllocator.hh:47. The ternary guard n > 0u
-#                            correctly prevents zero/overflow allocation, but
-#                            GCC's IPA analysis loses the guard after deep
-#                            template inlining and reports worst-case SIZE_MAX*sizeof(T)+63.
-EXTRA_CXX_FLAGS="-Wno-dangling-reference -Wno-restrict -include cstdint -Wno-alloc-size-larger-than"
+# Common (both GCC and clang):
+#   -include cstdint         third_party/ssc uses SIZE_MAX without <cstdint>
+#
+# GCC-only:
+#   -Wno-dangling-reference  (GCC 13+): false-positive in fmt/core.h via btwxt
+#   -Wno-restrict            (GCC 15+): false-positive in fmt/format.h
+#   -Wno-alloc-size-larger-than  (GCC 15+): false-positive in ObjexxFCL
+#
+# clang-only:
+#   -Wno-deprecated-literal-operator  clang deprecates `operator"" _a`
+#                                     (space before UDL identifier) in fmt 8.0.1
+EXTRA_CXX_FLAGS="-include cstdint"
+if "${CXX:-c++}" --version 2>&1 | grep -q clang; then
+    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator"
+else
+    # GCC
+    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-dangling-reference -Wno-restrict -Wno-alloc-size-larger-than"
+fi
 
 # Set a long placeholder RPATH so patchelf can always rewrite it.
 # rattler-build uses patchelf post-install to set $ORIGIN-relative RPATHs,
