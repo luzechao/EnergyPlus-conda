@@ -101,7 +101,7 @@ if errorlevel 1 exit /b 1
 :: The wrapper uses %~dp0 (cmd.exe runtime variable = directory of the .bat file)
 :: to locate energyplus.exe one level up: Library\bin\..\energyplus.exe
 if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
-"%PREFIX%\python.exe" -c "open(r'%PREFIX%\Library\bin\energyplus.bat', 'w').write('@echo off\r\n\"%~dp0..\\energyplus.exe\" %*\r\n')"
+"%PREFIX%\python.exe" -c "open(r'%PREFIX%\Library\bin\energyplus.bat', 'w').write('@echo off\r\nset \"_ep=%~dp0..\\energyplus.exe\"\r\n\"%_ep%\" %*\r\n')"
 
 :: 2. pyenergyplus .pth file
 :: rattler-build injects %SP_DIR% = the site-packages dir that will be packaged.
