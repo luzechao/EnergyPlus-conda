@@ -40,11 +40,13 @@ requirements:
 
 tests:
   - script:
-      # Verify the energyplus binary is on PATH and reports the correct version.
-      # On Unix: $PREFIX/bin/energyplus shell wrapper.
-      # On Windows: activate.d script adds %CONDA_PREFIX%\Library to PATH so
-      # energyplus.exe is found directly.
-      - energyplus --version
+      # On Unix the wrapper is $PREFIX/bin/energyplus (already on PATH).
+      # On Windows energyplus.exe is in %PREFIX%\Library; we prepend it to PATH
+      # via the env key since test environments do not run activate.d scripts.
+      - if: unix
+        then: energyplus --version
+      - if: win
+        then: set "PATH=%PREFIX%\Library;%PATH%" && energyplus --version
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 
