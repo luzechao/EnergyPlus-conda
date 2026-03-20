@@ -99,7 +99,7 @@ if errorlevel 1 exit /b 1
 :: 1. Wrapper bat in Library\bin\ (always on conda PATH)
 :: Use base64-encoded script so rattler-build prefix replacement cannot mangle
 :: the wrapper contents or the file path — PLACEHOLDER is substituted at runtime.
-"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCmJhdF9wYXRoID0gb3MucGF0aC5qb2luKHInUExBQ0VIT0xERVInLCAnTGlicmFyeScsICdiaW4nLCAnZW5lcmd5cGx1cy5iYXQnKQpvcy5tYWtlZGlycyhvcy5wYXRoLmRpcm5hbWUoYmF0X3BhdGgpLCBleGlzdF9vaz1UcnVlKQp3aXRoIG9wZW4oYmF0X3BhdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJ0BlY2hvIG9mZg0Kc2V0ICJfZXA9JX5kcDAuLlxlbmVyZ3lwbHVzLmV4ZSINCiIlX2VwJSIgJSoNCicpCg==').decode().replace('PLACEHOLDER', r'%PREFIX%'))"
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCmJhdF9wYXRoID0gb3MucGF0aC5qb2luKHInUExBQ0VIT0xERVInLCAnTGlicmFyeScsICdiaW4nLCAnZW5lcmd5cGx1cy5iYXQnKQpvcy5tYWtlZGlycyhvcy5wYXRoLmRpcm5hbWUoYmF0X3BhdGgpLCBleGlzdF9vaz1UcnVlKQp3aXRoIG9wZW4oYmF0X3BhdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJ0BlY2hvIG9mZicgKyBjaHIoMTMpK2NocigxMCkgKyAnc2V0ICJfZXA9JX5kcDAuLlxlbmVyZ3lwbHVzLmV4ZSInICsgY2hyKDEzKStjaHIoMTApICsgJyIlX2VwJSIgJSonICsgY2hyKDEzKStjaHIoMTApKQo=').decode().replace('PLACEHOLDER', r'%PREFIX%'))"
 if errorlevel 1 exit /b 1
 
 :: 2. pyenergyplus .pth file
