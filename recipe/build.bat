@@ -90,11 +90,11 @@ if errorlevel 1 exit /b 1
 :: ---------------------------------------------------------------------------
 
 :: 1. Wrapper bat in Library\bin\ (always on conda PATH)
+:: Use Python to write the file so cmd.exe does not expand %~dp0 at write time.
+:: The wrapper uses %~dp0 (cmd.exe runtime variable = directory of the .bat file)
+:: to locate energyplus.exe one level up: Library\bin\..\energyplus.exe
 if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
-(
-    echo @echo off
-    echo "%%~dp0..\energyplus.exe" %%*
-) > "%PREFIX%\Library\bin\energyplus.bat"
+"%PREFIX%\python.exe" -c "open(r'%PREFIX%\Library\bin\energyplus.bat', 'w').write('@echo off\r\n\"%~dp0..\\energyplus.exe\" %*\r\n')"
 
 :: 2. pyenergyplus .pth file
 :: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages.

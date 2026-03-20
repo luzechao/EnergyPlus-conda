@@ -41,9 +41,12 @@ requirements:
 tests:
   - script:
       # On Unix: $PREFIX/bin/energyplus shell wrapper (always on PATH).
-      # On Windows: %PREFIX%\Library\bin\energyplus.bat wrapper (Library\bin
-      # is always on conda PATH). Both are installed during post-install.
-      - energyplus --version
+      # On Windows: rattler-build test envs do not run conda activation so
+      # Library\bin is not on PATH. Call the wrapper by full path instead.
+      - if: unix
+        then: energyplus --version
+      - if: win
+        then: '"%PREFIX%\Library\bin\energyplus" --version'
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 

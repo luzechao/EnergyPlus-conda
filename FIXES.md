@@ -162,8 +162,9 @@ if os.path.exists(tcl_dir):
 4. `1edf54b`: switched to `activate.d\energyplus.bat` that prepends `%CONDA_PREFIX%\Library` to PATH — works for activated environments but not for non-interactive use (subprocess calls, CI without activation, etc.).
 5. `3949048`: changed the test to inline `set "PATH=%PREFIX%\Library;%PATH%"` — worked for CI tests but doesn't address user-facing non-interactive use.
 
-**Correct fix (final):** Reinstated the `%~dp0` wrapper approach from step 3:
-- `build.bat` creates `%PREFIX%\Library\bin\energyplus.bat` containing `"%%~dp0..\energyplus.exe" %%*`.
-- At runtime, `%~dp0` expands to `%PREFIX%\Library\bin\` (the wrapper's own directory), so `%~dp0..` resolves to `%PREFIX%\Library\`. This works in any install prefix, in activated and non-activated environments, and in subprocess calls.
-- `recipe.yaml` test uses a plain unconditional `energyplus --version` — `Library\bin` is always on conda PATH.
+**Correct fix (final):**
+- `build.bat` writes `%PREFIX%\Library\bin\energyplus.bat` via **Python** (not `echo` in a `(...)` shell block). Using `echo` inside `(...)` causes `cmd.exe` to expand `%~dp0` at write time to the recipe directory, which rattler-build then replaces with its prefix placeholder — resulting in `%PREFIX%` literally in the wrapper at test time. Python writes the literal string `%~dp0` without expansion.
+- The wrapper contains `"%~dp0..\energyplus.exe" %*`. At runtime, `%~dp0` expands to `Library\bin\`, so `%~dp0..` = `Library\` — correct at any install prefix.
+- rattler-build test environments do NOT run conda activation, so `Library\bin` is not on PATH during tests. `recipe.yaml` calls the wrapper by full path on Windows: `"%PREFIX%\Library\bin\energyplus" --version`. `%PREFIX%` IS injected by rattler-build into test scripts.
+- Normal user use (`conda activate` / `pixi shell`): `Library\bin` is on PATH, so `energyplus` works directly.
 - `.pth` file uses relative `..\..\Library` (from site-packages) so `import pyenergyplus` works at any install path.
