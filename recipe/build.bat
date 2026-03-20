@@ -44,20 +44,11 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 :: energyplusapi.dll, but in the conda h_env tcl is a separate package and that
 :: directory does not exist under the Python prefix.
 ::
-:: Write the patch script to a temp file first to avoid cmd.exe quoting issues
-:: with double-quotes inside a -c "..." string.
+:: The patch script is base64-encoded to avoid all cmd.exe quoting/special-char
+:: issues. At runtime Python decodes it, substitutes the real SRC_DIR path, and
+:: execs it directly — no temp file needed, no heredoc fragility.
 :: ---------------------------------------------------------------------------
-(
-  echo import pathlib
-  echo p = pathlib.Path(r'%SRC_DIR%\cmake\PythonCopyStandardLib.py'^)
-  echo t = p.read_text(^)
-  echo old = '    shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
-  echo line1 = '    if os.path.exists(tcl_dir)' + chr(58^) + ''
-  echo line2 = '        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
-  echo new = line1 + chr(10^) + line2
-  echo p.write_text(t.replace(old, new^)^)
-) > "%TEMP%\patch_pylib.py"
-"%PREFIX%\python.exe" "%TEMP%\patch_pylib.py"
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aChyJ1BMQUNFSE9MREVSL2NtYWtlL1B5dGhvbkNvcHlTdGFuZGFyZExpYi5weScpCnQgPSBwLnJlYWRfdGV4dCgpCm9sZCA9ICcgICAgc2h1dGlsLmNvcHl0cmVlKHRjbF9kaXIsIHRhcmdldF9kaXIsIGRpcnNfZXhpc3Rfb2s9VHJ1ZSknCm5ldyA9ICcgICAgaWYgb3MucGF0aC5leGlzdHModGNsX2Rpcik6CiAgICAgICAgc2h1dGlsLmNvcHl0cmVlKHRjbF9kaXIsIHRhcmdldF9kaXIsIGRpcnNfZXhpc3Rfb2s9VHJ1ZSknCnAud3JpdGVfdGV4dCh0LnJlcGxhY2Uob2xkLCBuZXcpKQo=').decode().replace('PLACEHOLDER', r'%SRC_DIR%'))"
 if errorlevel 1 exit /b 1
 
 :: Use Visual Studio 17 2022 generator for C/C++; gfortran for Fortran.
