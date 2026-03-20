@@ -62,7 +62,19 @@ _rpath="${PREFIX}/lib"
 while [ ${#_rpath} -lt 256 ]; do _rpath="${_rpath}/././"; done
 
 # shellcheck disable=SC2086  # CMAKE_ARGS and EXTRA_CXX_FLAGS must be word-split
-cmake ${CMAKE_ARGS} \
+
+# On macOS, rattler-build injects clang as CMAKE_CXX_COMPILER but gcc as
+# CMAKE_C_COMPILER (via activate-gcc script before activate_clang).
+# EnergyPlus's CompilerFlags.cmake adds -fcolor-diagnostics to project_options
+# when CMAKE_CXX_COMPILER_ID is AppleClang, but project_options applies to ALL
+# languages including C — and gcc's C compiler rejects -fcolor-diagnostics.
+# Fix: force CMAKE_C_COMPILER to clang when CLANG is set (macOS only).
+EXTRA_CMAKE_ARGS=""
+if [ -n "${CLANG:-}" ]; then
+    EXTRA_CMAKE_ARGS="-DCMAKE_C_COMPILER=${CLANG}"
+fi
+
+cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \
   -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
