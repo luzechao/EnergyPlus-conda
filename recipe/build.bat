@@ -69,3 +69,30 @@ if errorlevel 1 exit /b 1
 cmake --build "%BUILD_DIR%" --config Release --target install -j %CPU_COUNT%
 
 if errorlevel 1 exit /b 1
+
+:: ---------------------------------------------------------------------------
+:: Post-install: wire up conda-friendly paths (Windows)
+::
+:: On Windows, rattler-build sets CMAKE_INSTALL_PREFIX=%PREFIX%\Library so
+:: EnergyPlus installs everything flat to %PREFIX%\Library\ (energyplus.exe,
+:: DLLs, IDD files, pyenergyplus\, etc.).
+:: conda's PATH includes %PREFIX%\Library\bin but NOT %PREFIX%\Library\ itself.
+::
+:: 1. Create %PREFIX%\Library\bin\energyplus.bat wrapper so `energyplus` is on
+::    PATH.  The wrapper cd-s to %PREFIX%\Library first so the binary can find
+::    its co-located IDD/data files via relative paths.
+::
+:: 2. Drop energyplus.pth in site-packages so `import pyenergyplus` works.
+:: ---------------------------------------------------------------------------
+
+:: 1. Wrapper bat
+if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
+(
+    echo @echo off
+    echo cd /d "%PREFIX%\Library"
+    echo energyplus.exe %%*
+) > "%PREFIX%\Library\bin\energyplus.bat"
+
+:: 2. pyenergyplus .pth file
+for /f "delims=" %%i in ('"%PREFIX%\python.exe" -c "import site; print(site.getsitepackages()[0])"') do set "SITE_PACKAGES=%%i"
+echo %PREFIX%\Library> "%SITE_PACKAGES%\energyplus.pth"
