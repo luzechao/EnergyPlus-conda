@@ -42,8 +42,8 @@ tests:
   - script:
       # Verify the energyplus binary is on PATH and reports the correct version.
       # On Unix: $PREFIX/bin/energyplus shell wrapper.
-      # On Windows: %PREFIX%\Library\bin\energyplus.bat; cmd.exe resolves .bat
-      # via PATHEXT so `energyplus` (without .exe suffix) works on all platforms.
+      # On Windows: activate.d script adds %CONDA_PREFIX%\Library to PATH so
+      # energyplus.exe is found directly.
       - energyplus --version
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"

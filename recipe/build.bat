@@ -78,29 +78,34 @@ if errorlevel 1 exit /b 1
 :: DLLs, IDD files, pyenergyplus\, etc.).
 :: conda's PATH includes %PREFIX%\Library\bin but NOT %PREFIX%\Library\ itself.
 ::
-:: 1. Create %PREFIX%\Library\bin\energyplus.bat wrapper so `energyplus` is on
-::    PATH.  The wrapper cd-s to %PREFIX%\Library first so the binary can find
-::    its co-located IDD/data files via relative paths.
+:: Strategy: use conda activation scripts in etc\conda\activate.d\ to prepend
+:: %PREFIX%\Library to PATH when the environment is activated.  This is the
+:: standard conda pattern and works in both normal and test environments.
 ::
-:: 2. Drop energyplus.pth in site-packages so `import pyenergyplus` works.
+:: Also drop energyplus.pth in site-packages so `import pyenergyplus` works.
 :: ---------------------------------------------------------------------------
 
-:: 1. Wrapper bat
-:: Use %%~dp0.. to resolve the install dir at runtime relative to the wrapper's
-:: own location (%PREFIX%\Library\bin\..\  = %PREFIX%\Library\).
-:: Do NOT bake %PREFIX% into the wrapper — it is the build-time prefix and will
-:: be wrong when the package is installed into a different environment.
-if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
+:: 1. Activation / deactivation scripts
+::    activate.d\energyplus.bat  — prepends %CONDA_PREFIX%\Library to PATH
+::    deactivate.d\energyplus.bat — removes it
+if not exist "%PREFIX%\etc\conda\activate.d"   mkdir "%PREFIX%\etc\conda\activate.d"
+if not exist "%PREFIX%\etc\conda\deactivate.d" mkdir "%PREFIX%\etc\conda\deactivate.d"
+
+:: activate: prepend Library\ to PATH so energyplus.exe is found directly
 (
     echo @echo off
-    echo "%%~dp0..\energyplus.exe" %%*
-) > "%PREFIX%\Library\bin\energyplus.bat"
+    echo set "PATH=%%CONDA_PREFIX%%\Library;%%PATH%%"
+) > "%PREFIX%\etc\conda\activate.d\energyplus.bat"
+
+:: deactivate: strip it back out
+(
+    echo @echo off
+    echo set "PATH=%%PATH:%CONDA_PREFIX%\Library;=%%"
+) > "%PREFIX%\etc\conda\deactivate.d\energyplus.bat"
 
 :: 2. pyenergyplus .pth file
-:: Write a path relative to site-packages so it works in any install prefix.
-:: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages and
-:: EnergyPlus is installed at %PREFIX%\Library, so the relative path is
-:: "..\..\Library" (site-packages -> Lib -> PREFIX -> Library).
-:: Python resolves relative .pth entries relative to the site-packages dir.
+:: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages.
+:: EnergyPlus is at %PREFIX%\Library, so relative path is "..\..\Library".
+:: Python resolves relative .pth entries relative to site-packages.
 for /f "delims=" %%i in ('"%PREFIX%\python.exe" -c "import site; print(site.getsitepackages()[0])"') do set "SITE_PACKAGES=%%i"
 echo ..\..\Library> "%SITE_PACKAGES%\energyplus.pth"
