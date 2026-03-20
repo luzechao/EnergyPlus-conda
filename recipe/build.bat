@@ -106,5 +106,5 @@ if errorlevel 1 exit /b 1
 :: rattler-build injects %SP_DIR% = the site-packages dir that will be packaged.
 :: Use base64-encoded script to avoid rattler-build mangling %SP_DIR% path and
 :: to avoid trailing-space bug from cmd.exe echo redirect.
-"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCnB0aCA9IG9zLnBhdGguam9pbihyJ1BMQUNFSE9MREVSJywgJ2VuZXJneXBsdXMucHRoJykKb3MubWFrZWRpcnMob3MucGF0aC5kaXJuYW1lKHB0aCksIGV4aXN0X29rPVRydWUpCndpdGggb3BlbihwdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJy4uLy4uL0xpYnJhcnkKJykK').decode().replace('PLACEHOLDER', r'%SP_DIR%'))"
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCnB0aCA9IG9zLnBhdGguam9pbihyJ1BMQUNFSE9MREVSJywgJ2VuZXJneXBsdXMucHRoJykKb3MubWFrZWRpcnMob3MucGF0aC5kaXJuYW1lKHB0aCksIGV4aXN0X29rPVRydWUpCndpdGggb3BlbihwdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJy4uLy4uL0xpYnJhcnknICsgY2hyKDEwKSkK').decode().replace('PLACEHOLDER', r'%SP_DIR%'))"
 if errorlevel 1 exit /b 1
