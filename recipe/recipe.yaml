@@ -51,6 +51,9 @@ tests:
       # Diagnostic: show what's installed so we can confirm the layout
       - if: win
         then: python -c "import sys,os; lib=os.path.join(sys.prefix,'Library'); print('Library contents:'); [print(' ',f) for f in os.listdir(lib)] if os.path.isdir(lib) else print('NO Library dir')"
+      # Diagnostic: show sys.path and check for .pth file
+      - if: win
+        then: python -c "import sys,os; sp=os.path.join(sys.prefix,'Lib','site-packages'); pth=os.path.join(sp,'energyplus.pth'); print('pth exists:',os.path.exists(pth)); print('pth content:',open(pth).read() if os.path.exists(pth) else 'MISSING'); print('sys.path:',sys.path)"
       # Run energyplus --version
       - if: unix
         then: energyplus --version

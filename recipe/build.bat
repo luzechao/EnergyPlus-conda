@@ -108,4 +108,4 @@ if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
 :: EnergyPlus is at %PREFIX%\Library, so relative path is "..\..\Library".
 :: Python resolves relative .pth entries relative to site-packages.
 for /f "delims=" %%i in ('"%PREFIX%\python.exe" -c "import site; print(site.getsitepackages()[0])"') do set "SITE_PACKAGES=%%i"
-echo ..\..\Library> "%SITE_PACKAGES%\energyplus.pth"
+echo ../../Library> "%SITE_PACKAGES%\energyplus.pth"
