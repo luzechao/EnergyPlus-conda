@@ -104,8 +104,8 @@ if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
 "%PREFIX%\python.exe" -c "open(r'%PREFIX%\Library\bin\energyplus.bat', 'w').write('@echo off\r\n\"%~dp0..\\energyplus.exe\" %*\r\n')"
 
 :: 2. pyenergyplus .pth file
-:: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages.
-:: EnergyPlus is at %PREFIX%\Library, so relative path is "..\..\Library".
-:: Python resolves relative .pth entries relative to site-packages.
-for /f "delims=" %%i in ('"%PREFIX%\python.exe" -c "import site; print(site.getsitepackages()[0])"') do set "SITE_PACKAGES=%%i"
-echo ../../Library> "%SITE_PACKAGES%\energyplus.pth"
+:: rattler-build injects %SP_DIR% = the site-packages dir that will be packaged.
+:: A relative .pth entry is resolved by Python relative to site-packages itself.
+:: %PREFIX%\Lib\site-packages -> %PREFIX%\Library is two levels up then Library.
+if not exist "%SP_DIR%" mkdir "%SP_DIR%"
+echo ../../Library> "%SP_DIR%\energyplus.pth"

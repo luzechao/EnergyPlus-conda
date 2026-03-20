@@ -153,5 +153,6 @@ chmod +x "${PREFIX}/bin/energyplus"
 
 # 2. Make pyenergyplus importable: drop a .pth file in site-packages
 #    pointing at $PREFIX so `import pyenergyplus` resolves to $PREFIX/pyenergyplus/
-SITE_PACKAGES="$(python -c 'import site; print(site.getsitepackages()[0])')"
-echo "${PREFIX}" > "${SITE_PACKAGES}/energyplus.pth"
+#    Use rattler-build-injected $SP_DIR (the site-packages that gets packaged).
+mkdir -p "${SP_DIR}"
+echo "${PREFIX}" > "${SP_DIR}/energyplus.pth"
