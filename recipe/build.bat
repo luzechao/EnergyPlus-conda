@@ -97,15 +97,14 @@ if errorlevel 1 exit /b 1
 :: ---------------------------------------------------------------------------
 
 :: 1. Wrapper bat in Library\bin\ (always on conda PATH)
-:: Use Python to write the file so cmd.exe does not expand %~dp0 at write time.
-:: The wrapper uses %~dp0 (cmd.exe runtime variable = directory of the .bat file)
-:: to locate energyplus.exe one level up: Library\bin\..\energyplus.exe
-if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
-"%PREFIX%\python.exe" -c "open(r'%PREFIX%\Library\bin\energyplus.bat', 'w').write('@echo off\r\nset \"_ep=%~dp0..\\energyplus.exe\"\r\n\"%_ep%\" %*\r\n')"
+:: Use base64-encoded script so rattler-build prefix replacement cannot mangle
+:: the wrapper contents or the file path — PLACEHOLDER is substituted at runtime.
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCmJhdF9wYXRoID0gb3MucGF0aC5qb2luKHInUExBQ0VIT0xERVInLCAnTGlicmFyeScsICdiaW4nLCAnZW5lcmd5cGx1cy5iYXQnKQpvcy5tYWtlZGlycyhvcy5wYXRoLmRpcm5hbWUoYmF0X3BhdGgpLCBleGlzdF9vaz1UcnVlKQp3aXRoIG9wZW4oYmF0X3BhdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJ0BlY2hvIG9mZg0Kc2V0ICJfZXA9JX5kcDAuLlxlbmVyZ3lwbHVzLmV4ZSINCiIlX2VwJSIgJSoNCicpCg==').decode().replace('PLACEHOLDER', r'%PREFIX%'))"
+if errorlevel 1 exit /b 1
 
 :: 2. pyenergyplus .pth file
 :: rattler-build injects %SP_DIR% = the site-packages dir that will be packaged.
-:: A relative .pth entry is resolved by Python relative to site-packages itself.
-:: %PREFIX%\Lib\site-packages -> %PREFIX%\Library is two levels up then Library.
-if not exist "%SP_DIR%" mkdir "%SP_DIR%"
-echo ../../Library> "%SP_DIR%\energyplus.pth"
+:: Use base64-encoded script to avoid rattler-build mangling %SP_DIR% path and
+:: to avoid trailing-space bug from cmd.exe echo redirect.
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IG9zCnB0aCA9IG9zLnBhdGguam9pbihyJ1BMQUNFSE9MREVSJywgJ2VuZXJneXBsdXMucHRoJykKb3MubWFrZWRpcnMob3MucGF0aC5kaXJuYW1lKHB0aCksIGV4aXN0X29rPVRydWUpCndpdGggb3BlbihwdGgsICd3JykgYXMgZjoKICAgIGYud3JpdGUoJy4uLy4uL0xpYnJhcnkKJykK').decode().replace('PLACEHOLDER', r'%SP_DIR%'))"
+if errorlevel 1 exit /b 1
