@@ -40,11 +40,11 @@ requirements:
 
 tests:
   - script:
-      # Verify the energyplus binary is on PATH and reports the correct version
-      - if: unix
-        then: energyplus --version
-      - if: win
-        then: energyplus.exe --version
+      # Verify the energyplus binary is on PATH and reports the correct version.
+      # On Unix: $PREFIX/bin/energyplus shell wrapper.
+      # On Windows: %PREFIX%\Library\bin\energyplus.bat; cmd.exe resolves .bat
+      # via PATHEXT so `energyplus` (without .exe suffix) works on all platforms.
+      - energyplus --version
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 
