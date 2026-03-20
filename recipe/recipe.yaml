@@ -40,13 +40,10 @@ requirements:
 
 tests:
   - script:
-      # On Unix the wrapper is $PREFIX/bin/energyplus (already on PATH).
-      # On Windows energyplus.exe is in %PREFIX%\Library; we prepend it to PATH
-      # via the env key since test environments do not run activate.d scripts.
-      - if: unix
-        then: energyplus --version
-      - if: win
-        then: set "PATH=%PREFIX%\Library;%PATH%" && energyplus --version
+      # On Unix: $PREFIX/bin/energyplus shell wrapper (always on PATH).
+      # On Windows: %PREFIX%\Library\bin\energyplus.bat wrapper (Library\bin
+      # is always on conda PATH). Both are installed during post-install.
+      - energyplus --version
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
 

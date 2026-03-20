@@ -150,11 +150,20 @@ if os.path.exists(tcl_dir):
 
 ## 15. Windows — `energyplus.exe` not on PATH after install
 
-**Commits:** `c6fcc71`, `dc2959e`, `1745200`  
+**Commits:** `c6fcc71`, `dc2959e`, `1745200`, `140643e`, `1edf54b`, `3949048`  
 **Platform:** win-64  
-**Error:** Test phase: `'energyplus.exe' is not recognized as an internal or external command` — rattler-build sets `CMAKE_INSTALL_PREFIX=%PREFIX%\Library` on Windows. EnergyPlus installs flat to `%PREFIX%\Library\energyplus.exe`, but conda's PATH includes `%PREFIX%\Library\bin`, not `%PREFIX%\Library\` itself.  
-**Fix (`build.bat`):** Post-install steps added:
-1. Create `%PREFIX%\Library\bin\energyplus.bat` wrapper that `cd /d`s to `%PREFIX%\Library` then calls `.\energyplus.exe %*` (explicit relative path — Windows does **not** search the current directory implicitly like Unix does, so the bare name `energyplus.exe` fails even after `cd`).
-2. Write `%PREFIX%\Library` into `energyplus.pth` in site-packages so `import pyenergyplus` works on Windows.
+**Error:** Test phase: `'energyplus.exe' is not recognized as an internal or external command` — rattler-build sets `CMAKE_INSTALL_PREFIX=%PREFIX%\Library` on Windows. EnergyPlus installs flat to `%PREFIX%\Library\energyplus.exe`, but conda's PATH includes `%PREFIX%\Library\bin`, not `%PREFIX%\Library\` itself.
 
-**Fix (`recipe.yaml`):** Change test from `energyplus.exe --version` to `energyplus --version`. Cmd.exe will not match a `.bat` wrapper when the command is spelled with `.exe` explicitly. The bare name works on all platforms: cmd.exe resolves `.bat` via `PATHEXT` on Windows, and the shell finds the script wrapper on Unix.
+**Fix history (several dead-ends before the correct solution):**
+
+1. `c6fcc71`: wrapper with `cd /d "%PREFIX%\Library"` — baked build-time `%PREFIX%` into the wrapper, broken at install time.
+2. `1745200`: changed `energyplus.exe` to `.\energyplus.exe` in the wrapper — still broken because `%PREFIX%` was hardcoded.
+3. `140643e`: switched to `"%%~dp0..\energyplus.exe" %%*` — correct runtime-relative approach. `%~dp0` is a `cmd.exe` special variable that expands to the directory of the running `.bat` file at the moment of execution (not at build time). However, this was incorrectly diagnosed as broken and abandoned.
+4. `1edf54b`: switched to `activate.d\energyplus.bat` that prepends `%CONDA_PREFIX%\Library` to PATH — works for activated environments but not for non-interactive use (subprocess calls, CI without activation, etc.).
+5. `3949048`: changed the test to inline `set "PATH=%PREFIX%\Library;%PATH%"` — worked for CI tests but doesn't address user-facing non-interactive use.
+
+**Correct fix (final):** Reinstated the `%~dp0` wrapper approach from step 3:
+- `build.bat` creates `%PREFIX%\Library\bin\energyplus.bat` containing `"%%~dp0..\energyplus.exe" %%*`.
+- At runtime, `%~dp0` expands to `%PREFIX%\Library\bin\` (the wrapper's own directory), so `%~dp0..` resolves to `%PREFIX%\Library\`. This works in any install prefix, in activated and non-activated environments, and in subprocess calls.
+- `recipe.yaml` test uses a plain unconditional `energyplus --version` — `Library\bin` is always on conda PATH.
+- `.pth` file uses relative `..\..\Library` (from site-packages) so `import pyenergyplus` works at any install path.

@@ -78,30 +78,23 @@ if errorlevel 1 exit /b 1
 :: DLLs, IDD files, pyenergyplus\, etc.).
 :: conda's PATH includes %PREFIX%\Library\bin but NOT %PREFIX%\Library\ itself.
 ::
-:: Strategy: use conda activation scripts in etc\conda\activate.d\ to prepend
-:: %PREFIX%\Library to PATH when the environment is activated.  This is the
-:: standard conda pattern and works in both normal and test environments.
+:: Strategy:
+:: 1. Create %PREFIX%\Library\bin\energyplus.bat — a thin wrapper that invokes
+::    energyplus.exe relative to its own location using %~dp0 (cmd.exe runtime
+::    variable that expands to the directory of the running .bat file).
+::    %~dp0 always has a trailing backslash, so %~dp0..\energyplus.exe resolves
+::    to %PREFIX%\Library\energyplus.exe regardless of install prefix.
+::    This works in activated envs, non-interactive scripts, and subprocesses.
 ::
-:: Also drop energyplus.pth in site-packages so `import pyenergyplus` works.
+:: 2. Drop energyplus.pth in site-packages so `import pyenergyplus` works.
 :: ---------------------------------------------------------------------------
 
-:: 1. Activation / deactivation scripts
-::    activate.d\energyplus.bat  — prepends %CONDA_PREFIX%\Library to PATH
-::    deactivate.d\energyplus.bat — removes it
-if not exist "%PREFIX%\etc\conda\activate.d"   mkdir "%PREFIX%\etc\conda\activate.d"
-if not exist "%PREFIX%\etc\conda\deactivate.d" mkdir "%PREFIX%\etc\conda\deactivate.d"
-
-:: activate: prepend Library\ to PATH so energyplus.exe is found directly
+:: 1. Wrapper bat in Library\bin\ (always on conda PATH)
+if not exist "%PREFIX%\Library\bin" mkdir "%PREFIX%\Library\bin"
 (
     echo @echo off
-    echo set "PATH=%%CONDA_PREFIX%%\Library;%%PATH%%"
-) > "%PREFIX%\etc\conda\activate.d\energyplus.bat"
-
-:: deactivate: strip it back out
-(
-    echo @echo off
-    echo set "PATH=%%PATH:%CONDA_PREFIX%\Library;=%%"
-) > "%PREFIX%\etc\conda\deactivate.d\energyplus.bat"
+    echo "%%~dp0..\energyplus.exe" %%*
+) > "%PREFIX%\Library\bin\energyplus.bat"
 
 :: 2. pyenergyplus .pth file
 :: On Windows conda, site-packages is at %PREFIX%\Lib\site-packages.
