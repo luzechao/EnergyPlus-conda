@@ -25,6 +25,20 @@ mkdir -p "${BUILD_DIR}"
 sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
     "${SRC_DIR}/third_party/Windows-CalcEngine/src/Gases/src/Gas.hpp"
 
+# third_party/kiva/vendor/boost-1.77.0: Boost.MPL integral_wrapper uses
+# static_cast<EnumType>(value - 1) to compute the 'prior' typedef.
+# In C++17, static_cast to an enum type whose underlying type is not fixed is
+# only valid if the value is within the declared enumerator range; -1 is not,
+# so clang (strict C++17) rejects it with:
+#   "non-type template argument is not a constant expression"
+# The file already uses a C-style cast (T)(expr) for old Borland/GCC<3, so we
+# simply force the C-style cast path for all compilers by replacing the
+# static_cast branch.  A C-style cast is not subject to the C++17 enum range
+# restriction and produces identical runtime behavior.
+sed -i.bak \
+    's|#   define BOOST_MPL_AUX_STATIC_CAST(T, expr) static_cast<T>(expr)|#   define BOOST_MPL_AUX_STATIC_CAST(T, expr) (T)(expr)|' \
+    "${SRC_DIR}/third_party/kiva/vendor/boost-1.77.0/boost/mpl/aux_/static_cast.hpp"
+
 # Extra CXX flags to paper over third-party source issues.
 # Flags are split by compiler because clang rejects GCC-only warning options
 # with -Werror,-Wunknown-warning-option.
