@@ -52,7 +52,9 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
   echo p = pathlib.Path(r'%SRC_DIR%\cmake\PythonCopyStandardLib.py'^)
   echo t = p.read_text(^)
   echo old = '    shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
-  echo new = '    if os.path.exists(tcl_dir):\n        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
+  echo line1 = '    if os.path.exists(tcl_dir):'
+  echo line2 = '        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
+  echo new = line1 + chr(10^) + line2
   echo p.write_text(t.replace(old, new^)^)
 ) > "%TEMP%\patch_pylib.py"
 "%PREFIX%\python.exe" "%TEMP%\patch_pylib.py"
