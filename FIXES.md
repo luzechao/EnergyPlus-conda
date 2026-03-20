@@ -168,3 +168,22 @@ if os.path.exists(tcl_dir):
 - rattler-build test environments do NOT run conda activation, so `Library\bin` is not on PATH during tests. `recipe.yaml` calls the wrapper by full path on Windows: `"%PREFIX%\Library\bin\energyplus" --version`. `%PREFIX%` IS injected by rattler-build into test scripts.
 - Normal user use (`conda activate` / `pixi shell`): `Library\bin` is on PATH, so `energyplus` works directly.
 - `.pth` file uses relative `..\..\Library` (from site-packages) so `import pyenergyplus` works at any install path.
+
+---
+
+## 16. Windows — `cmake --build --target install` ignores `CMAKE_INSTALL_PREFIX`
+
+**Platform:** win-64  
+**Error:** All EnergyPlus files install to `C:/Program Files/EnergyPlus/` instead of `%PREFIX%\Library\`. The conda package contained only `Library/bin/energyplus.bat` (79 B) and nothing else.  
+**Root cause:** EnergyPlus sets `BUILD_PACKAGE=ON` by default for CPack, which bakes `C:/Program Files/EnergyPlus` as the install destination at configure time. `cmake --build --target install` uses that baked prefix and ignores the `-DCMAKE_INSTALL_PREFIX` injected by rattler-build via `%CMAKE_ARGS%`.  
+**Fix:**
+1. Pass `-DBUILD_PACKAGE=OFF` at configure time to prevent CPack from overriding the install prefix.
+2. Split the build and install steps: use `cmake --build ... -j %CPU_COUNT%` (no `--target install`), then `cmake --install "%BUILD_DIR%" --config Release --prefix "%PREFIX%\Library"`. The `--prefix` flag on `cmake --install` always wins over the configure-time baked value.
+
+---
+
+## 17. Windows — broken Python patch command using `-c` with embedded double-quotes
+
+**Platform:** win-64  
+**Error:** `'%PREFIX%\python.exe" -c "import' is not recognized as an internal or external command` — the Python one-liner for patching `PythonCopyStandardLib.py` used `-c "..."` with embedded double-quotes and `\n` escape sequences. `cmd.exe` tokenizes on `"`, so the command was split mid-argument.  
+**Fix:** Write the patch script to `%TEMP%\patch_pylib.py` using a `(echo ...) >` heredoc block, then execute it with `"%PREFIX%\python.exe" "%TEMP%\patch_pylib.py"`. Python non-raw string `\n` inside the `echo`'d assignment is a real newline, so the indented `shutil.copytree` call is correctly guarded by the `if os.path.exists(tcl_dir):` block.

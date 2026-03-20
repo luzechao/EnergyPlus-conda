@@ -43,8 +43,19 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 :: check.  EnergyPlus unconditionally copies %PREFIX%\tcl during the build of
 :: energyplusapi.dll, but in the conda h_env tcl is a separate package and that
 :: directory does not exist under the Python prefix.
+::
+:: Write the patch script to a temp file first to avoid cmd.exe quoting issues
+:: with double-quotes inside a -c "..." string.
 :: ---------------------------------------------------------------------------
-"%PREFIX%\python.exe" -c "import pathlib; p = pathlib.Path(r'%SRC_DIR%\cmake\PythonCopyStandardLib.py'); t = p.read_text(); t = t.replace('    shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True)', '    if os.path.exists(tcl_dir):\n        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True)'); p.write_text(t)"
+(
+  echo import pathlib
+  echo p = pathlib.Path(r'%SRC_DIR%\cmake\PythonCopyStandardLib.py'^)
+  echo t = p.read_text(^)
+  echo old = '    shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
+  echo new = '    if os.path.exists(tcl_dir):\n        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True^)'
+  echo p.write_text(t.replace(old, new^)^)
+) > "%TEMP%\patch_pylib.py"
+"%PREFIX%\python.exe" "%TEMP%\patch_pylib.py"
 if errorlevel 1 exit /b 1
 
 :: Use Visual Studio 17 2022 generator for C/C++; gfortran for Fortran.
@@ -57,7 +68,7 @@ cmake %CMAKE_ARGS% ^
   -DOPENGL_REQUIRED=OFF ^
   -DDOCUMENTATION_BUILD=DoNotBuild ^
   -DBUILD_TESTING=OFF ^
-  -DBUILD_PACKAGE=ON ^
+  -DBUILD_PACKAGE=OFF ^
   -DLINK_WITH_PYTHON=ON ^
   -DPython_ROOT_DIR="%PREFIX%" ^
   -DPython_FIND_STRATEGY=LOCATION ^
@@ -66,7 +77,10 @@ cmake %CMAKE_ARGS% ^
 
 if errorlevel 1 exit /b 1
 
-cmake --build "%BUILD_DIR%" --config Release --target install -j %CPU_COUNT%
+cmake --build "%BUILD_DIR%" --config Release -j %CPU_COUNT%
+if errorlevel 1 exit /b 1
+
+cmake --install "%BUILD_DIR%" --config Release --prefix "%PREFIX%\Library"
 
 if errorlevel 1 exit /b 1
 
