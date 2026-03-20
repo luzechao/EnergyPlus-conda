@@ -38,6 +38,15 @@ echo MINGW_GFORTRAN = %MINGW_GFORTRAN%
 set "BUILD_DIR=%SRC_DIR%\..\build_energyplus"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
+:: ---------------------------------------------------------------------------
+:: Patch PythonCopyStandardLib.py to guard the Tcl/Tk copy behind an existence
+:: check.  EnergyPlus unconditionally copies %PREFIX%\tcl during the build of
+:: energyplusapi.dll, but in the conda h_env tcl is a separate package and that
+:: directory does not exist under the Python prefix.
+:: ---------------------------------------------------------------------------
+"%PREFIX%\python.exe" -c "import pathlib; p = pathlib.Path(r'%SRC_DIR%\cmake\PythonCopyStandardLib.py'); t = p.read_text(); t = t.replace('    shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True)', '    if os.path.exists(tcl_dir):\n        shutil.copytree(tcl_dir, target_dir, dirs_exist_ok=True)'); p.write_text(t)"
+if errorlevel 1 exit /b 1
+
 :: Use Visual Studio 17 2022 generator for C/C++; gfortran for Fortran.
 :: CMAKE_ARGS provides -DCMAKE_INSTALL_PREFIX=%PREFIX%\Library and path hints.
 cmake %CMAKE_ARGS% ^

@@ -25,19 +25,29 @@ mkdir -p "${BUILD_DIR}"
 sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
     "${SRC_DIR}/third_party/Windows-CalcEngine/src/Gases/src/Gas.hpp"
 
-# third_party/kiva/vendor/boost-1.77.0: Boost.MPL integral_wrapper uses
-# static_cast<EnumType>(value - 1) to compute the 'prior' typedef.
-# In C++17, static_cast to an enum type whose underlying type is not fixed is
-# only valid if the value is within the declared enumerator range; -1 is not,
-# so clang (strict C++17) rejects it with:
+# third_party/kiva/vendor/boost-1.77.0: Boost.MPL integral_wrapper generates
+# 'prior' and 'next' typedefs by computing (value - 1) / (value + 1) as
+# non-type template arguments of an enum type.  In strict C++17, clang rejects
+# this when the value falls outside the declared enumerator range, e.g. -1 is
+# outside [0,3] for a 4-value enum:
 #   "non-type template argument is not a constant expression"
-# The file already uses a C-style cast (T)(expr) for old Borland/GCC<3, so we
-# simply force the C-style cast path for all compilers by replacing the
-# static_cast branch.  A C-style cast is not subject to the C++17 enum range
-# restriction and produces identical runtime behavior.
-sed -i.bak \
-    's|#   define BOOST_MPL_AUX_STATIC_CAST(T, expr) static_cast<T>(expr)|#   define BOOST_MPL_AUX_STATIC_CAST(T, expr) (T)(expr)|' \
-    "${SRC_DIR}/third_party/kiva/vendor/boost-1.77.0/boost/mpl/aux_/static_cast.hpp"
+#
+# The root fix is to give each affected enum a fixed underlying type (': int').
+# With a fixed underlying type, ALL integer values representable by 'int' are
+# valid non-type template arguments, so (value - 1) = -1 is legal.
+#
+# The three Boost numeric-conversion enums that are used as mpl::integral_c
+# template parameters and thus hit this path:
+#   int_float_mixture_enum  (4 values: 0-3)
+#   udt_builtin_mixture_enum (4 values: 0-3)
+#   sign_mixture_enum        (4 values: 0-3)
+_boost_nc="${SRC_DIR}/third_party/kiva/vendor/boost-1.77.0/boost/numeric/conversion"
+sed -i.bak 's/enum int_float_mixture_enum$/enum int_float_mixture_enum : int/' \
+    "${_boost_nc}/int_float_mixture_enum.hpp"
+sed -i.bak 's/enum udt_builtin_mixture_enum$/enum udt_builtin_mixture_enum : int/' \
+    "${_boost_nc}/udt_builtin_mixture_enum.hpp"
+sed -i.bak 's/enum sign_mixture_enum$/enum sign_mixture_enum : int/' \
+    "${_boost_nc}/sign_mixture_enum.hpp"
 
 # Extra CXX flags to paper over third-party source issues.
 # Flags are split by compiler because clang rejects GCC-only warning options
