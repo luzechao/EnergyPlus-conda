@@ -48,7 +48,7 @@ if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 :: issues. At runtime Python decodes it, substitutes the real SRC_DIR path, and
 :: execs it directly — no temp file needed, no heredoc fragility.
 :: ---------------------------------------------------------------------------
-"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aChyJ1BMQUNFSE9MREVSL2NtYWtlL1B5dGhvbkNvcHlTdGFuZGFyZExpYi5weScpCnQgPSBwLnJlYWRfdGV4dCgpCm9sZCA9ICcgICAgc2h1dGlsLmNvcHl0cmVlKHRjbF9kaXIsIHRhcmdldF9kaXIsIGRpcnNfZXhpc3Rfb2s9VHJ1ZSknCm5ldyA9ICcgICAgaWYgb3MucGF0aC5leGlzdHModGNsX2Rpcik6CiAgICAgICAgc2h1dGlsLmNvcHl0cmVlKHRjbF9kaXIsIHRhcmdldF9kaXIsIGRpcnNfZXhpc3Rfb2s9VHJ1ZSknCnAud3JpdGVfdGV4dCh0LnJlcGxhY2Uob2xkLCBuZXcpKQo=').decode().replace('PLACEHOLDER', r'%SRC_DIR%'))"
+"%PREFIX%\python.exe" -c "import base64; exec(base64.b64decode(b'aW1wb3J0IHBhdGhsaWIsIG9zCnAgPSBwYXRobGliLlBhdGgocidQTEFDRUhPTERFUi9jbWFrZS9QeXRob25Db3B5U3RhbmRhcmRMaWIucHknKQp0ID0gcC5yZWFkX3RleHQoKQpvbGQgPSAnICAgIHNodXRpbC5jb3B5dHJlZSh0Y2xfZGlyLCB0YXJnZXRfZGlyLCBkaXJzX2V4aXN0X29rPVRydWUpJwpuZXcgPSAnICAgIGlmIG9zLnBhdGguZXhpc3RzKHRjbF9kaXIpOicgKyBjaHIoMTApICsgJyAgICAgICAgc2h1dGlsLmNvcHl0cmVlKHRjbF9kaXIsIHRhcmdldF9kaXIsIGRpcnNfZXhpc3Rfb2s9VHJ1ZSknCnAud3JpdGVfdGV4dCh0LnJlcGxhY2Uob2xkLCBuZXcpKQo=').decode().replace('PLACEHOLDER', r'%SRC_DIR%'))"
 if errorlevel 1 exit /b 1
 
 :: Use Visual Studio 17 2022 generator for C/C++; gfortran for Fortran.
