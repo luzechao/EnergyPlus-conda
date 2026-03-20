@@ -150,11 +150,11 @@ if os.path.exists(tcl_dir):
 
 ## 15. Windows — `energyplus.exe` not on PATH after install
 
-**Commits:** `c6fcc71`, `dc2959e`  
+**Commits:** `c6fcc71`, `dc2959e`, `1745200`  
 **Platform:** win-64  
 **Error:** Test phase: `'energyplus.exe' is not recognized as an internal or external command` — rattler-build sets `CMAKE_INSTALL_PREFIX=%PREFIX%\Library` on Windows. EnergyPlus installs flat to `%PREFIX%\Library\energyplus.exe`, but conda's PATH includes `%PREFIX%\Library\bin`, not `%PREFIX%\Library\` itself.  
 **Fix (`build.bat`):** Post-install steps added:
-1. Create `%PREFIX%\Library\bin\energyplus.bat` wrapper that `cd`s to `%PREFIX%\Library` then calls `energyplus.exe %*` (so the binary finds its co-located IDD/data files via relative paths).
+1. Create `%PREFIX%\Library\bin\energyplus.bat` wrapper that `cd /d`s to `%PREFIX%\Library` then calls `.\energyplus.exe %*` (explicit relative path — Windows does **not** search the current directory implicitly like Unix does, so the bare name `energyplus.exe` fails even after `cd`).
 2. Write `%PREFIX%\Library` into `energyplus.pth` in site-packages so `import pyenergyplus` works on Windows.
 
 **Fix (`recipe.yaml`):** Change test from `energyplus.exe --version` to `energyplus --version`. Cmd.exe will not match a `.bat` wrapper when the command is spelled with `.exe` explicitly. The bare name works on all platforms: cmd.exe resolves `.bat` via `PATHEXT` on Windows, and the shell finds the script wrapper on Unix.
