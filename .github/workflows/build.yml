@@ -73,5 +73,6 @@ jobs:
           (github.ref == 'refs/heads/main' ||
            github.ref == 'refs/heads/master' ||
            startsWith(github.ref, 'refs/tags/'))
+        shell: bash
         run: |
           rattler-build upload prefix -c natlabrockies output/${{ matrix.target.platform }}/*.conda
