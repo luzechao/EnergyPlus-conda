@@ -130,6 +130,10 @@ cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \
 
 cmake --build "${BUILD_DIR}" --target install -j"${CPU_COUNT:-2}"
 
+# Remove GUI app bundles — they are CPack/installer artifacts not needed in a
+# conda package, and rattler-build's codesign step fails on them (macOS).
+rm -rf "${PREFIX}/PreProcess/EP-Launch-Lite.app"
+
 # ---------------------------------------------------------------------------
 # Post-install: wire up conda-friendly paths
 # ---------------------------------------------------------------------------
