@@ -74,8 +74,17 @@ cmake --build "%BUILD_DIR%" --config Release -j %CPU_COUNT%
 if errorlevel 1 exit /b 1
 
 cmake --install "%BUILD_DIR%" --config Release --prefix "%PREFIX%\Library"
-
 if errorlevel 1 exit /b 1
+
+:: Install Fortran subprojects separately — cmake_add_fortran_subdirectory uses
+:: NO_EXTERNAL_INSTALL so their install() rules are not triggered by the parent
+:: cmake --install. Each subproject must be installed via its own binary dir.
+for %%P in (ReadVars ExpandObjects Slab Basement) do (
+  if exist "%BUILD_DIR%\src\%%P" (
+    cmake --install "%BUILD_DIR%\src\%%P" --config Release --prefix "%PREFIX%\Library"
+    if errorlevel 1 exit /b 1
+  )
+)
 
 :: ---------------------------------------------------------------------------
 :: Post-install: wire up conda-friendly paths (Windows)
