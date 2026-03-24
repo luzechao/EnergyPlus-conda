@@ -34,7 +34,6 @@ mamba install -c https://prefix.dev/natlabrockies energyplus
 | Platform | Status |
 |----------|--------|
 | linux-64 | ✅ |
-| osx-64 | ✅ |
 | osx-arm64 | ✅ |
 | win-64 | ✅ |
 
@@ -80,11 +79,13 @@ Pull requests trigger a build but do **not** upload.
 | Flag | Value | Reason |
 |------|-------|--------|
 | `BUILD_FORTRAN` | `ON` | Builds `ReadVarEso` |
-| `OPENGL_REQUIRED` | `OFF` | No GUI needed |
+| `OPENGL_REQUIRED` | `OFF` | `Penumbra` Off* |
 | `BUILD_PACKAGE` | `ON` | Enables CPack install rules |
 | `LINK_WITH_PYTHON` | `ON` | Enables `pyenergyplus` API |
 | `DOCUMENTATION_BUILD` | `DoNotBuild` | Skips LaTeX docs |
 | `BUILD_TESTING` | `OFF` | Skips unit tests during packaging |
+
+[Penumbra](https://github.com/bigladder/penumbra) (third_party/penumbra/), a GPU-accelerated solar shading library from Big Ladder Software.
 
 ## License
 
