@@ -17,3 +17,10 @@ c_stdlib_version:
 # No compiler version pin needed: -Wno-dangling-reference and -Wno-restrict
 # are injected via CMAKE_CXX_FLAGS in build.sh, which suppresses both GCC 13+
 # diagnostics that fire in the bundled fmt v8.0.1 third-party headers.
+
+# Python variant matrix: build one package per Python version.
+# Bare "python" in recipe.yaml requirements lets rattler-build inject the
+# variant; Python's own run_exports handles the ABI pin automatically.
+python:
+  - "3.12"
+  - "3.13"

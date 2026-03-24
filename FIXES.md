@@ -187,3 +187,24 @@ if os.path.exists(tcl_dir):
 **Platform:** win-64  
 **Error:** `'%PREFIX%\python.exe" -c "import' is not recognized as an internal or external command` — the Python one-liner for patching `PythonCopyStandardLib.py` used `-c "..."` with embedded double-quotes and `\n` escape sequences. `cmd.exe` tokenizes on `"`, so the command was split mid-argument.  
 **Fix:** Write the patch script to `%TEMP%\patch_pylib.py` using a `(echo ...) >` heredoc block, then execute it with `"%PREFIX%\python.exe" "%TEMP%\patch_pylib.py"`. Python non-raw string `\n` inside the `echo`'d assignment is a real newline, so the indented `shutil.copytree` call is correctly guarded by the `if os.path.exists(tcl_dir):` block.
+
+---
+
+## 18. Multi-Python variant matrix
+
+**Platform:** all  
+**Reason:** The package links against a specific Python (via `LINK_WITH_PYTHON=ON`), so a
+separate `.conda` artifact must be built for each supported Python version. A single
+`python >=3.9` pin produced a single package built against whatever Python conda-forge
+resolved at that moment (was 3.14 alpha in CI).  
+**Fix:** Added a `python:` list to `conda_build_config.yaml`:
+```yaml
+python:
+  - "3.12"
+  - "3.13"
+```
+Changed all three `python >=3.9` requirements in `recipe.yaml` (build, host, run) to bare
+`python`. rattler-build iterates over both versions automatically, producing
+`energyplus-25.2.0-py312h..._0.conda` and `energyplus-25.2.0-py313h..._0.conda`
+per platform (6 packages total). Python's own `run_exports` handles the ABI pin
+(`python >=3.12,<3.13.0a0` etc.) automatically — no `python_abi` dependency needed.
