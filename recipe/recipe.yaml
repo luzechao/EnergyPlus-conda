@@ -30,6 +30,8 @@ requirements:
       then: ${{ compiler('cxx') }}
     - if: unix
       then: ${{ compiler('fortran') }}
+    - if: linux
+      then: sysroot_linux-64 >=2.17
     - cmake >=3.19
     - ninja
     - python   # variant-injected; needed at configure time for LINK_WITH_PYTHON
