@@ -212,6 +212,27 @@ per platform (6 packages total). Python's own `run_exports` handles the ABI pin
 
 ---
 
+## 20. v26.1.0 — `fmt` 8.0.1 `consteval` incompatibility with Clang 22 (osx-arm64)
+
+**Platform:** osx-arm64  
+**Error:**
+```
+third_party/fmt-8.0.1/include/fmt/format-inl.h:2530:18: error: call to consteval
+function 'fmt::basic_format_string<...>::basic_format_string<...>' is not a
+constant expression [-Werror,-Winvalid-constexpr]
+    out = format_to(out, FMT_STRING("{:x}"), value);
+```
+**Root cause:** `fmt` 8.0.1's `FMT_STRING(s)` macro wraps a `consteval` constructor
+call (when `FMT_USE_CONSTEVAL` is 1, which it is by default in C++20 mode). Clang 22
+(now shipped on conda-forge osx-arm64) enforces stricter `consteval` rules: it rejects
+the `FMT_STRING("{:x}")` call at line 2530 of `format-inl.h` because that context is
+not a constant expression. Earlier Clang versions were more permissive.  
+**Fix:** Add `-DFMT_USE_CONSTEVAL=0` to the clang-only branch of `EXTRA_CXX_FLAGS` in
+`build.sh`. This preprocessor define disables `fmt`'s use of `consteval` for format
+string validation, falling back to `constexpr`, which is accepted by all Clang versions.
+
+---
+
 ## 19. v26.1.0 — kiva vendored Boost bumped from 1.77.0 to 1.88.0
 
 **Commit:** `ced0b2f` *(version bump)* / fixed in follow-up  
