@@ -212,6 +212,27 @@ per platform (6 packages total). Python's own `run_exports` handles the ABI pin
 
 ---
 
+## 21. v26.1.0 — CMake 4.x `clang-scan-deps` not found on osx-arm64 (exit code 127)
+
+**Platform:** osx-arm64  
+**Error:**
+```
+FAILED: [code=127]
+"CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND" -format=p1689 -- ...
+/bin/sh: CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND: command not found
+```
+**Root cause:** CMake 4.x enables C++20 module dependency scanning by default and
+probes for `clang-scan-deps` (stored in `CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS`).
+The conda-forge clang-22 toolchain on osx-arm64 does not ship `clang-scan-deps` as a
+separate binary, so CMake sets the variable to `CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS-NOTFOUND`
+and then immediately tries to execute that literal string as the first build step —
+resulting in exit code 127 (command not found) before any source file is compiled.  
+**Fix:** Pass `-DCMAKE_CXX_SCAN_FOR_MODULES=OFF` unconditionally in `EXTRA_CMAKE_ARGS`
+in `build.sh`. EnergyPlus does not use C++20 named modules, so disabling the scanning
+step is safe.
+
+---
+
 ## 20. v26.1.0 — `fmt` 8.0.1 `consteval` incompatibility with Clang 22 (osx-arm64)
 
 **Platform:** osx-arm64  

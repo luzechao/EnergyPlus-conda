@@ -118,9 +118,16 @@ while [ ${#_rpath} -lt 256 ]; do _rpath="${_rpath}/././"; done
 # when CMAKE_CXX_COMPILER_ID is AppleClang, but project_options applies to ALL
 # languages including C — and gcc's C compiler rejects -fcolor-diagnostics.
 # Fix: force CMAKE_C_COMPILER to clang when CLANG is set (macOS only).
-EXTRA_CMAKE_ARGS=""
+#
+# CMake 4.x enables C++20 module dependency scanning by default and looks for
+# clang-scan-deps (CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS). On conda-forge macOS
+# the clang toolchain does not include clang-scan-deps as a separate binary, so
+# CMake sets CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS to *-NOTFOUND and then tries
+# to execute that literal string as a command — exit code 127.
+# EnergyPlus does not use C++20 modules, so disable scanning entirely.
+EXTRA_CMAKE_ARGS="-DCMAKE_CXX_SCAN_FOR_MODULES=OFF"
 if [ -n "${CLANG:-}" ]; then
-    EXTRA_CMAKE_ARGS="-DCMAKE_C_COMPILER=${CLANG}"
+    EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DCMAKE_C_COMPILER=${CLANG}"
 fi
 
 cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \
