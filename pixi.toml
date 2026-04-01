@@ -13,5 +13,5 @@ build = "rattler-build build --recipe recipe/ -c conda-forge --variant-config co
 build-verbose = "rattler-build build --recipe recipe/ -c conda-forge --variant-config conda_build_config.yaml --no-clean"
 
 # Run only the rattler-build test phase against a built .conda artifact
-# Usage: pixi run test -- /path/to/energyplus-25.2.0-*.conda
+# Usage: pixi run test -- /path/to/energyplus-26.1.0-*.conda
 test = "rattler-build test -c conda-forge"

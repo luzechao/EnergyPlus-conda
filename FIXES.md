@@ -2,6 +2,7 @@
 
 Chronological record of every issue hit while packaging EnergyPlus v25.2.0
 as a rattler-build conda recipe targeting `linux-64`, `osx-arm64`, and `win-64`.
+These fixes were accumulated for v25.2.0 and carry forward to v26.1.0.
 
 ---
 

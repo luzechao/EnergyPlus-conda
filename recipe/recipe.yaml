@@ -1,5 +1,5 @@
 context:
-  version: "25.2.0"
+  version: "26.1.0"
 
 package:
   name: energyplus
@@ -12,7 +12,7 @@ source:
   submodules: false
 
 build:
-  number: 2
+  number: 0
   script:
     - if: unix
       then: bash $RECIPE_DIR/build.sh
