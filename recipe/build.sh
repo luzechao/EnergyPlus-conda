@@ -76,16 +76,22 @@ sed -i.bak 's/enum sign_mixture_enum$/enum sign_mixture_enum : int/' \
 #                                     older and rejects the flag with
 #                                     -Werror,-Wunknown-warning-option.
 #                                     This suppresses that class of error safely.
-#   -DFMT_USE_CONSTEVAL=0             fmt 8.0.1's FMT_STRING() macro wraps a
-#                                     consteval constructor call. Clang 22
-#                                     (conda-forge osx-arm64) enforces stricter
-#                                     consteval rules and rejects the call in
-#                                     format-inl.h:2530. This define disables
-#                                     fmt's consteval usage, falling back to
-#                                     constexpr, which all Clang versions accept.
+#   -DFMT_CONSTEVAL=                  fmt 8.0.1 core.h defines FMT_CONSTEVAL as
+#                                     'consteval' when FMT_CLANG_VERSION>=1101
+#                                     and C++20 is used. Clang 22 enforces
+#                                     stricter consteval rules and rejects the
+#                                     basic_format_string consteval constructor
+#                                     call in format-inl.h:2530/2534. Defining
+#                                     FMT_CONSTEVAL as empty via the command line
+#                                     (before core.h's #ifndef guard runs) makes
+#                                     the constructor non-consteval, accepted by
+#                                     all Clang versions. Note: -DFMT_CONSTEVAL=
+#                                     requires a trailing = with no value; we
+#                                     pass it as a separate word via the variable.
+_fmt_consteval_flag="-DFMT_CONSTEVAL="
 EXTRA_CXX_FLAGS="-include cstdint"
 if "${CXX:-c++}" --version 2>&1 | grep -q clang; then
-    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator -Wno-deprecated-declarations -Wno-unknown-warning-option -DFMT_USE_CONSTEVAL=0"
+    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator -Wno-deprecated-declarations -Wno-unknown-warning-option ${_fmt_consteval_flag}"
 else
     # GCC
     EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-dangling-reference -Wno-restrict -Wno-alloc-size-larger-than"
