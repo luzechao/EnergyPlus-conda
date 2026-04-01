@@ -25,7 +25,7 @@ mkdir -p "${BUILD_DIR}"
 sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
     "${SRC_DIR}/third_party/Windows-CalcEngine/src/Gases/src/Gas.hpp"
 
-# third_party/kiva/vendor/boost-1.77.0: Boost.MPL integral_wrapper generates
+# third_party/kiva/vendor/boost-1.88.0: Boost.MPL integral_wrapper generates
 # 'prior' and 'next' typedefs by computing (value - 1) / (value + 1) as
 # non-type template arguments of an enum type.  In strict C++17, clang rejects
 # this when the value falls outside the declared enumerator range, e.g. -1 is
@@ -41,7 +41,7 @@ sed -i.bak 's/bool m_DefaultGas;/bool m_DefaultGas = false;/' \
 #   int_float_mixture_enum  (4 values: 0-3)
 #   udt_builtin_mixture_enum (4 values: 0-3)
 #   sign_mixture_enum        (4 values: 0-3)
-_boost_nc="${SRC_DIR}/third_party/kiva/vendor/boost-1.77.0/boost/numeric/conversion"
+_boost_nc="${SRC_DIR}/third_party/kiva/vendor/boost-1.88.0/boost/numeric/conversion"
 sed -i.bak 's/enum int_float_mixture_enum$/enum int_float_mixture_enum : int/' \
     "${_boost_nc}/int_float_mixture_enum.hpp"
 sed -i.bak 's/enum udt_builtin_mixture_enum$/enum udt_builtin_mixture_enum : int/' \

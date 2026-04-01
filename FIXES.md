@@ -1,8 +1,8 @@
 # EnergyPlus conda packaging — build fix log
 
-Chronological record of every issue hit while packaging EnergyPlus v25.2.0
-as a rattler-build conda recipe targeting `linux-64`, `osx-arm64`, and `win-64`.
-These fixes were accumulated for v25.2.0 and carry forward to v26.1.0.
+Chronological record of every issue hit while packaging EnergyPlus as a
+rattler-build conda recipe targeting `linux-64`, `osx-arm64`, and `win-64`.
+Fixes 1–18 were accumulated for v25.2.0. Fix 19 onwards apply to v26.1.0.
 
 ---
 
@@ -209,3 +209,24 @@ Changed all three `python >=3.9` requirements in `recipe.yaml` (build, host, run
 `energyplus-25.2.0-py312h..._0.conda` and `energyplus-25.2.0-py313h..._0.conda`
 per platform (6 packages total). Python's own `run_exports` handles the ABI pin
 (`python >=3.12,<3.13.0a0` etc.) automatically — no `python_abi` dependency needed.
+
+---
+
+## 19. v26.1.0 — kiva vendored Boost bumped from 1.77.0 to 1.88.0
+
+**Commit:** `ced0b2f` *(version bump)* / fixed in follow-up  
+**Platform:** all (linux-64, osx-arm64; win-64 was cancelled before running)  
+**Error:**
+```
+sed: can't read $SRC_DIR/third_party/kiva/vendor/boost-1.77.0/boost/numeric/conversion/int_float_mixture_enum.hpp: No such file or directory
+```
+**Root cause:** Between v25.2.0 and v26.1.0, the kiva sub-library updated its vendored
+Boost from **1.77.0** to **1.88.0**. The `build.sh` sed patches (fix #12) hard-coded the
+path `third_party/kiva/vendor/boost-1.77.0/...`; that directory no longer exists, causing
+the build script to exit immediately with status 2 before any compilation occurred.  
+**Fix:** Updated the `_boost_nc` path variable in `build.sh` from `boost-1.77.0` to
+`boost-1.88.0`. The three enum files (`int_float_mixture_enum.hpp`,
+`udt_builtin_mixture_enum.hpp`, `sign_mixture_enum.hpp`) remain at the same relative
+sub-path `boost/numeric/conversion/` within the new Boost version, and the C++17 strict
+enum range issue in `integral_wrapper` is not yet fixed in Boost 1.88.0, so the patches
+themselves are still required.
