@@ -39,7 +39,7 @@ mamba install -c https://prefix.dev/natlabrockies energyplus
 
 ## Current version
 
-EnergyPlus **26.1.0** — source: [NatLabRockies/EnergyPlus @ v26.1.0](https://github.com/NatLabRockies/EnergyPlus/tree/v26.1.0)
+EnergyPlus **26.2.0** — source: [NatLabRockies/EnergyPlus @ v26.2.0](https://github.com/NatLabRockies/EnergyPlus/tree/v26.2.0)
 
 ## Repository structure
 
@@ -89,6 +89,6 @@ Pull requests trigger a build but do **not** upload.
 
 ## License
 
-EnergyPlus is released under a custom DOE/LBNL/UIUC BSD-style license (`LicenseRef-EnergyPlus`). See [LICENSE.txt](https://github.com/NatLabRockies/EnergyPlus/blob/v26.1.0/LICENSE.txt) in the upstream repository.
+EnergyPlus is released under a custom DOE/LBNL/UIUC BSD-style license (`LicenseRef-EnergyPlus`). See [LICENSE.txt](https://github.com/NatLabRockies/EnergyPlus/blob/v26.2.0/LICENSE.txt) in the upstream repository.
 
 This packaging repository is maintained by [@luzechao](https://github.com/luzechao) / [NatLabRockies](https://github.com/NatLabRockies).

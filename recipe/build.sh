@@ -55,6 +55,9 @@ sed -i.bak 's/enum sign_mixture_enum$/enum sign_mixture_enum : int/' \
 #
 # Common (both GCC and clang):
 #   -include cstdint         third_party/ssc uses SIZE_MAX without <cstdint>
+#   -include algorithm       Windows-CalcEngine SquareMatrix.cpp calls std::fill
+#                            without <algorithm>; libc++ 23 no longer pulls it
+#                            in transitively
 #
 # GCC-only:
 #   -Wno-dangling-reference  (GCC 13+): false-positive in fmt/core.h via btwxt
@@ -62,8 +65,6 @@ sed -i.bak 's/enum sign_mixture_enum$/enum sign_mixture_enum : int/' \
 #   -Wno-alloc-size-larger-than  (GCC 15+): false-positive in ObjexxFCL
 #
 # clang-only:
-#   -Wno-deprecated-literal-operator  clang deprecates `operator"" _a`
-#                                     (space before UDL identifier) in fmt 8.0.1
 #   -Wno-deprecated-declarations      CLI11 2.4.2 uses std::wstring_convert
 #                                     (deprecated in C++17); libc++ emits the
 #                                     deprecation from inside its own header
@@ -76,22 +77,9 @@ sed -i.bak 's/enum sign_mixture_enum$/enum sign_mixture_enum : int/' \
 #                                     older and rejects the flag with
 #                                     -Werror,-Wunknown-warning-option.
 #                                     This suppresses that class of error safely.
-#   -DFMT_CONSTEVAL=                  fmt 8.0.1 core.h defines FMT_CONSTEVAL as
-#                                     'consteval' when FMT_CLANG_VERSION>=1101
-#                                     and C++20 is used. Clang 22 enforces
-#                                     stricter consteval rules and rejects the
-#                                     basic_format_string consteval constructor
-#                                     call in format-inl.h:2530/2534. Defining
-#                                     FMT_CONSTEVAL as empty via the command line
-#                                     (before core.h's #ifndef guard runs) makes
-#                                     the constructor non-consteval, accepted by
-#                                     all Clang versions. Note: -DFMT_CONSTEVAL=
-#                                     requires a trailing = with no value; we
-#                                     pass it as a separate word via the variable.
-_fmt_consteval_flag="-DFMT_CONSTEVAL="
-EXTRA_CXX_FLAGS="-include cstdint"
+EXTRA_CXX_FLAGS="-include cstdint -include algorithm"
 if "${CXX:-c++}" --version 2>&1 | grep -q clang; then
-    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-literal-operator -Wno-deprecated-declarations -Wno-unknown-warning-option ${_fmt_consteval_flag}"
+    EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unknown-warning-option"
 else
     # GCC
     EXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS} -Wno-dangling-reference -Wno-restrict -Wno-alloc-size-larger-than"
@@ -128,6 +116,22 @@ while [ ${#_rpath} -lt 256 ]; do _rpath="${_rpath}/././"; done
 EXTRA_CMAKE_ARGS="-DCMAKE_CXX_SCAN_FOR_MODULES=OFF"
 if [ -n "${CLANG:-}" ]; then
     EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DCMAKE_C_COMPILER=${CLANG}"
+fi
+
+# v26.2.0+ uses std::format with floating point (libc++ to_chars), and its
+# CMakeLists.txt hard-fails unless CMAKE_OSX_DEPLOYMENT_TARGET >= 13.3.
+# conda-forge defaults osx-arm64 to 11.0, so raise it everywhere it is baked.
+if [[ "$(uname)" == "Darwin" ]]; then
+    _old_mdt="${MACOSX_DEPLOYMENT_TARGET:-}"
+    export MACOSX_DEPLOYMENT_TARGET=13.3
+    if [ -n "${_old_mdt}" ]; then
+        CFLAGS="${CFLAGS//-mmacosx-version-min=${_old_mdt}/-mmacosx-version-min=13.3}"
+        CXXFLAGS="${CXXFLAGS//-mmacosx-version-min=${_old_mdt}/-mmacosx-version-min=13.3}"
+        CPPFLAGS="${CPPFLAGS//-mmacosx-version-min=${_old_mdt}/-mmacosx-version-min=13.3}"
+        LDFLAGS="${LDFLAGS//-mmacosx-version-min=${_old_mdt}/-mmacosx-version-min=13.3}"
+        export CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
+    fi
+    EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3"
 fi
 
 cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \

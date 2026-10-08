@@ -2,7 +2,8 @@
 
 Chronological record of every issue hit while packaging EnergyPlus as a
 rattler-build conda recipe targeting `linux-64`, `osx-arm64`, and `win-64`.
-Fixes 1–18 were accumulated for v25.2.0. Fix 19 onwards apply to v26.1.0.
+Fixes 1–18 were accumulated for v25.2.0. Fixes 19–21 apply to v26.1.0. Fix 22 onwards
+apply to v26.2.0.
 
 ---
 
@@ -276,3 +277,48 @@ the build script to exit immediately with status 2 before any compilation occurr
 sub-path `boost/numeric/conversion/` within the new Boost version, and the C++17 strict
 enum range issue in `integral_wrapper` is not yet fixed in Boost 1.88.0, so the patches
 themselves are still required.
+
+---
+
+## 22. v26.2.0 — macOS deployment target must be ≥ 13.3
+
+**Platform:** osx-arm64  
+**Error:** `CMakeLists.txt` now aborts at configure time:
+```
+The minimum required version for macOS is 13.3, however CMAKE_OSX_DEPLOYMENT_TARGET is set to 11.0.
+```
+**Root cause:** v26.2.0 migrated from bundled `fmt` to C++20 `std::format`, whose
+floating-point path needs libc++ `to_chars` (available from macOS 13.3). conda-forge
+defaults osx-arm64 to `MACOSX_DEPLOYMENT_TARGET=11.0`.  
+**Fix:** In `build.sh` on Darwin, export `MACOSX_DEPLOYMENT_TARGET=13.3`, rewrite any
+`-mmacosx-version-min=<old>` in `CFLAGS`/`CXXFLAGS`/`CPPFLAGS`/`LDFLAGS`, and pass
+`-DCMAKE_OSX_DEPLOYMENT_TARGET=13.3` after `${CMAKE_ARGS}`. `recipe.yaml` adds a
+`__osx >=13.3` run requirement on osx so the package is not installed on older macOS.
+
+---
+
+## 23. v26.2.0 — audit of earlier fixes against the new source
+
+- **#20 (`-DFMT_CONSTEVAL=`)** and the clang `-Wno-deprecated-literal-operator` flag
+  were removed: `third_party/fmt-8.0.1` no longer exists (replaced by `std::format`).
+- **#1 / GCC `-Wno-restrict`, `-Wno-dangling-reference`**: upstream `CompilerFlags.cmake`
+  now adds these itself for GCC; kept in `build.sh` as they are harmless.
+- **#2, #3, #12/#19, #13**: patched files/lines are unchanged in v26.2.0 (Boost is
+  still `boost-1.88.0`), so these patches still apply.
+- `cmake` minimum raised to `>=3.25` to match upstream `cmake_minimum_required`.
+
+---
+
+## 24. v26.2.0 — `std::fill` undeclared in Windows-CalcEngine with libc++ 23
+
+**Platform:** osx-arm64 (conda-forge clang/libcxx 23)  
+**Error:**
+```
+third_party/Windows-CalcEngine/src/Common/src/SquareMatrix.cpp:91:13: error: use of undeclared identifier 'fill'
+```
+**Root cause:** `SquareMatrix.cpp` calls `fill(...)` (found via ADL on `std::vector`
+iterators) without including `<algorithm>`. Older libc++ pulled `<algorithm>` in
+transitively; libc++ 23 removed that transitive include.  
+**Fix:** Add `-include algorithm` to the common `EXTRA_CXX_FLAGS` in `build.sh`
+(same approach as `-include cstdint` in #3). Verified locally: full osx-arm64 build
+(1010/1010 targets) compiles with no other errors.
