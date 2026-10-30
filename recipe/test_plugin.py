@@ -55,7 +55,7 @@ def _verified_callback(self, state):
         with sqlite3.connect(":memory:") as database:
             assert database.execute("select 26").fetchone() == (26,)
         ssl.create_default_context()
-        ctypes.CDLL(None)
+        assert ctypes.sizeof(ctypes.c_double) == 8
         marker.write_text(json.dumps({
             "prefix": sys.prefix,
             "stdlib": json.__file__,
