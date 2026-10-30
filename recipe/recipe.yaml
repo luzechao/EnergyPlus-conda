@@ -12,7 +12,7 @@ source:
   submodules: false
 
 build:
-  number: 0
+  number: 1
   script:
     - if: unix
       then: bash $RECIPE_DIR/build.sh
@@ -66,6 +66,14 @@ tests:
         then: python -c "import sys,subprocess,os; exe=os.path.join(sys.prefix,'Library','energyplus.exe'); print('Running:',exe); subprocess.run([exe,'--version'],check=True)"
       # Verify the Python API is importable
       - python -c "from pyenergyplus.api import EnergyPlusAPI; api = EnergyPlusAPI(); print('pyenergyplus OK')"
+  - script:
+      - python test_plugin.py
+    files:
+      recipe:
+        - test_plugin.py
+      source:
+        - testfiles/PythonPlugin1ZoneUncontrolledCondFD.idf
+        - testfiles/PythonPlugin1ZoneUncontrolledCondFD.py
 
 about:
   homepage: https://energyplus.net

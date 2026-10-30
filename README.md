@@ -29,6 +29,19 @@ mamba install -c https://prefix.dev/natlabrockies energyplus
 | IDD / data files | Energy+.idd and all required data files |
 | `ReadVarEso` | Post-processing utility (built with Fortran) |
 
+Packages reuse the conda environment's Python runtime and standard library.
+They omit bundled examples and graphical applications, retain command-line
+conversion tools, and use Zstandard level 19 compression. Linux binaries are
+stripped of unnecessary symbols.
+
+Removed GUIs include EP-Launch, IDF Version Updater, IDF Editor, EPDraw,
+and the Windows Weather Converter front end. The weather-processing DLL
+and its data remain available.
+
+Examples are available in the upstream [testfiles directory](https://github.com/NatLabRockies/EnergyPlus/tree/v26.2.0/testfiles).
+Package tests run an upstream example with a Python plugin and verify that
+embedded Python loads its modules from the conda environment.
+
 ## Supported platforms
 
 | Platform | Status |
@@ -70,9 +83,13 @@ The built `.conda` package will appear in `output/`.
 
 ## CI / publishing
 
-GitHub Actions builds all four platforms on every push to `main` and uploads to the `natlabrockies` prefix.dev channel via OIDC trusted publishing (no API key stored as a secret).
+GitHub Actions builds Linux, macOS ARM64, and Windows on pushes to `main` or
+`master`, pull requests, and manual workflow dispatches. Both supported Python
+variants run the package tests. Built packages are retained as GitHub Actions
+artifacts.
 
-Pull requests trigger a build but do **not** upload.
+Publishing to prefix.dev is disabled for these size-reduction builds; the
+existing published EnergyPlus 26.2 packages are not replaced.
 
 ## Key CMake flags
 
@@ -82,6 +99,7 @@ Pull requests trigger a build but do **not** upload.
 | `OPENGL_REQUIRED` | `OFF` | `Penumbra` Off* |
 | `BUILD_PACKAGE` | `ON` | Enables CPack install rules |
 | `LINK_WITH_PYTHON` | `ON` | Enables `pyenergyplus` API |
+| `PYTHON_CLI` | `OFF` | Does not bundle auxiliary Python applications |
 | `DOCUMENTATION_BUILD` | `DoNotBuild` | Skips LaTeX docs |
 | `BUILD_TESTING` | `OFF` | Skips unit tests during packaging |
 

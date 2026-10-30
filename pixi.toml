@@ -7,10 +7,10 @@ rattler-build = ">=0.36"
 
 [tasks]
 # Build the conda package locally using rattler-build
-build = "rattler-build build --recipe recipe/ -c conda-forge --variant-config conda_build_config.yaml"
+build = "rattler-build build --recipe recipe/ -c conda-forge --variant-config conda_build_config.yaml --package-format conda:19"
 
 # Rebuild with verbose CMake output (useful for debugging)
-build-verbose = "rattler-build build --recipe recipe/ -c conda-forge --variant-config conda_build_config.yaml --no-clean"
+build-verbose = "rattler-build build --recipe recipe/ -c conda-forge --variant-config conda_build_config.yaml --package-format conda:19 --keep-build"
 
 # Run only the rattler-build test phase against a built .conda artifact
 # Usage: pixi run test -- /path/to/energyplus-26.2.0-*.conda

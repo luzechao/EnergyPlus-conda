@@ -11,6 +11,7 @@ set -euo pipefail
 
 BUILD_DIR="${SRC_DIR}/../build_energyplus"
 mkdir -p "${BUILD_DIR}"
+"${PYTHON}" "${RECIPE_DIR}/prepare.py" patch
 
 # ---------------------------------------------------------------------------
 # Source patches for third-party code that has real bugs or missing includes
@@ -145,6 +146,7 @@ cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \
   -DBUILD_TESTING=OFF \
   -DBUILD_PACKAGE=ON \
   -DLINK_WITH_PYTHON=ON \
+  -DPYTHON_CLI=OFF \
   -DPython_ROOT_DIR="${PREFIX}" \
   -DPython_FIND_STRATEGY=LOCATION \
   -DCMAKE_INSTALL_RPATH="${_rpath}" \
@@ -154,9 +156,7 @@ cmake ${CMAKE_ARGS} ${EXTRA_CMAKE_ARGS} \
 
 cmake --build "${BUILD_DIR}" --target install -j"${CPU_COUNT:-2}"
 
-# Remove GUI app bundles — they are CPack/installer artifacts not needed in a
-# conda package, and rattler-build's codesign step fails on them (macOS).
-rm -rf "${PREFIX}/PreProcess/EP-Launch-Lite.app"
+"${PYTHON}" "${RECIPE_DIR}/prepare.py" clean "${BUILD_DIR}"
 
 # ---------------------------------------------------------------------------
 # Post-install: wire up conda-friendly paths

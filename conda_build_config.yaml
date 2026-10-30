@@ -1,18 +1,7 @@
 # Variant configuration for LOCAL rattler-build renders (pixi run build).
 # This file is at the repo root and passed via --variant-config in pixi.toml.
-# On CI the workflow writes a platform-specific copy to recipe/ instead.
-#
-# rattler-build does NOT support conda-build selector comments (# [linux]).
-# The values below are for Linux.  For local macOS builds swap in:
-#   c_stdlib: __osx
-#   c_stdlib_version: "10.13"   # or "11.0" for arm64
-#   macosx_deployment_target: "10.13"
-
-c_stdlib:
-  - sysroot
-
-c_stdlib_version:
-  - "2.17"
+# Compiler packages choose the platform's standard library. Linux's glibc
+# floor is set by the recipe's sysroot; macOS's 13.3 floor is set in build.sh.
 
 # No compiler version pin needed: -Wno-dangling-reference and -Wno-restrict
 # are injected via CMAKE_CXX_FLAGS in build.sh, which suppresses both GCC 13+
