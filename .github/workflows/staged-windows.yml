@@ -1,0 +1,54 @@
+name: Test staged EnergyPlus recipe on Windows
+
+on:
+  push:
+    branches: [ci/staged-energyplus-windows]
+    paths:
+      - .github/workflows/staged-windows.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Windows / Python ${{ matrix.python }}
+    runs-on: windows-2022
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+
+    steps:
+      - name: Checkout exact staged-recipes submission
+        uses: actions/checkout@v4
+        with:
+          repository: luzechao/staged-recipes
+          ref: 87d13cf4673285926c052447d99759fdd4407cae
+
+      - name: Test packaging helpers
+        run: python recipes/energyplus/test_prepare.py
+
+      # All compilers come from recipe dependencies; do not provision MSYS2.
+      - name: Build and test Windows package
+        uses: prefix-dev/rattler-build-action@v0.2.36
+        with:
+          rattler-build-version: v0.80.0
+          recipe-path: recipes/energyplus/recipe.yaml
+          build-args: >-
+            --target-platform win-64
+            --variant python=${{ matrix.python }}
+            --variant c_stdlib=vs
+            --variant c_compiler=vs2022
+            --variant cxx_compiler=vs2022
+            -c conda-forge
+            --package-format conda:19
+          upload-artifact: false
+
+      - name: Upload tested package
+        uses: actions/upload-artifact@v4
+        with:
+          name: staged-energyplus-win-64-py${{ matrix.python }}
+          path: output/win-64/*.conda
+          if-no-files-found: error

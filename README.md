@@ -91,6 +91,18 @@ artifacts.
 Publishing to prefix.dev is disabled for these size-reduction builds; the
 existing published EnergyPlus 26.2 packages are not replaced.
 
+### Validating the conda-forge submission on Windows
+
+The `ci/staged-energyplus-windows` branch runs
+[staged-windows.yml](.github/workflows/staged-windows.yml) on Windows 2022 for
+Python 3.12 and 3.13. It checks out the exact staged-recipes commit pinned in
+the workflow and builds its tarball-based recipe, including the Python plugin
+tests. Compilers and GNU Make are installed from conda-forge recipe
+dependencies, without provisioning the runner's MSYS2 installation.
+Successful packages are retained as artifacts; nothing is published.
+Update the checkout `ref` and push the workflow when testing a revised
+staged-recipes submission.
+
 ## Key CMake flags
 
 | Flag | Value | Reason |
